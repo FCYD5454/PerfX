@@ -192,6 +192,24 @@ let HARDWARE_TIERS = {
         { score: 3361, label: "Core i5 6500", desc: "Rank #177 - 27 D", class: "text-gray-500", detail: "Cores: 4 (4P) | TDP: 65 W" },
         { score: 3317, label: "Ryzen 3 3200G", desc: "Rank #175 - 27 D", class: "text-gray-500", detail: "Cores: 4 (4P) | TDP: 45-65 W" },
         { score: 3049, label: "Processor N250", desc: "Rank #179 - 26 D", class: "text-gray-500", detail: "Cores: 4 (4E) | TDP: 6 W" }
+        // Mobile additions
+        ,{ score: 24500, label: "M4 Max (16-Core)", desc: "Mobile King", class: "text-teal-500 font-bold", detail: "Apple Silicon" }
+        ,{ score: 14800, label: "M2 Max", desc: "Mobile High End", class: "text-teal-500 font-bold", detail: "Apple Silicon" }
+        ,{ score: 10500, label: "Snapdragon 8 Gen 3", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "Android King" }
+        ,{ score: 9200, label: "Dimensity 9300", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "MediaTek" }
+        ,{ score: 8500, label: "Snapdragon 8 Gen 2", desc: "Mobile High End", class: "text-teal-500 font-semibold", detail: "Android" }
+        ,{ score: 7400, label: "Apple A17 Pro", desc: "Mobile High End", class: "text-teal-500 font-semibold", detail: "iPhone 15 Pro" }
+        ,{ score: 6200, label: "Snapdragon 8+ Gen 1", desc: "Mobile High End", class: "text-teal-500 font-medium", detail: "Android" }
+        ,{ score: 5100, label: "Exynos 1280", desc: "Mobile Mid-Range", class: "text-teal-500 font-medium", detail: "Galaxy A53" }
+        ,{ score: 4200, label: "Snapdragon 778G", desc: "Mobile Mid-Range", class: "text-teal-500 font-medium", detail: "Popular mid-range" }
+        ,{ score: 3500, label: "Snapdragon 695", desc: "Mobile Entry 5G", class: "text-teal-500", detail: "Budget 5G" }
+        ,{ score: 3100, label: "Helio G99", desc: "Mobile Budget", class: "text-teal-500", detail: "4G gaming budget" }
+        ,{ score: 2800, label: "Snapdragon 680", desc: "Mobile Budget", class: "text-teal-500", detail: "Entry 4G" }
+        ,{ score: 2500, label: "Exynos 850", desc: "Mobile Entry", class: "text-gray-500", detail: "Galaxy A13" }
+        ,{ score: 2200, label: "Unisoc T616", desc: "Mobile Low-End", class: "text-gray-500", detail: "Budget tablet" }
+        ,{ score: 1900, label: "Helio G85", desc: "Mobile Low-End", class: "text-gray-500", detail: "Entry Android" }
+        ,{ score: 1600, label: "Snapdragon 662", desc: "Mobile Old Budget", class: "text-gray-500", detail: "Older budget" }
+        ,{ score: 1200, label: "Helio A22", desc: "Mobile Entry", class: "text-gray-500", detail: "Basic phone" }
     ],
     gpu: [
         { score: 47023, label: "RTX 5090", desc: "Rank #1 - 96", class: "text-purple-600 font-black", detail: "Gaming: 100/100 | Nvidia" },
@@ -280,6 +298,19 @@ let HARDWARE_TIERS = {
         { score: 2302, label: "GTX 960", desc: "Rank #86 - 11", class: "text-gray-500", detail: "Gaming: 9/100 | Nvidia" },
         { score: 1854, label: "RX 560", desc: "Rank #87 - 11", class: "text-gray-500", detail: "Gaming: 7/100 | AMD" },
         { score: 1736, label: "GTX 1050", desc: "Rank #88 - 10", class: "text-gray-500", detail: "Gaming: 6/100 | Nvidia" }
+        // Mobile additions
+        ,{ score: 4200, label: "M3 Max (40-Core)", desc: "Mobile Beast", class: "text-teal-500 font-bold", detail: "≈ RTX 3050 Laptop" }
+        ,{ score: 3100, label: "Snapdragon 8 Gen 3 GPU", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "~GTX 1650 Mobile" }
+        ,{ score: 2600, label: "A17 Pro GPU", desc: "Mobile High-End", class: "text-teal-500 font-semibold", detail: "iPhone 15 Pro ~GTX 1050 Ti" }
+        ,{ score: 2200, label: "Snapdragon 8 Gen 2 GPU", desc: "Mobile High-End", class: "text-teal-500 font-semibold", detail: "~GTX 1050" }
+        ,{ score: 1400, label: "Exynos 2200 GPU", desc: "Mobile Mid/High", class: "text-teal-500", detail: "RDNA2 Mobile" }
+        ,{ score: 1100, label: "Mali-G68 MP4", desc: "Mobile Mid-Range", class: "text-teal-500 font-medium", detail: "Galaxy A53 Class" }
+        ,{ score: 850, label: "Adreno 619", desc: "Mobile Entry 5G", class: "text-teal-500", detail: "Snapdragon 695" }
+        ,{ score: 650, label: "Mali-G57 MC2", desc: "Mobile Budget", class: "text-teal-500", detail: "Helio G99 / Dimensity 700" }
+        ,{ score: 450, label: "Adreno 610", desc: "Mobile Low-End", class: "text-gray-500", detail: "Snapdragon 680" }
+        ,{ score: 380, label: "Mali-G52 MC2", desc: "Mobile Low-End", class: "text-gray-500", detail: "Helio G85 / G80" }
+        ,{ score: 250, label: "PowerVR GE8320", desc: "Mobile Entry", class: "text-gray-500", detail: "Helio G25 / A22" }
+        ,{ score: 150, label: "Adreno 505", desc: "Mobile Obsolete", class: "text-gray-500", detail: "Snapdragon 435" }
     ]
 };
 
@@ -303,6 +334,13 @@ const NET_TIMEOUT_MS = 8000;       // per request timeout
 const NET_DOWNLOAD_URL = "https://speed.cloudflare.com/__down?bytes=5000000"; // 5MB
 const NET_LATENCY_URL = "https://speed.cloudflare.com/__down?bytes=0";       // tiny ping
 const LANG = ((document.documentElement.lang || '').toLowerCase().startsWith('en')) ? 'en' : 'zh';
+const DEVICE_CLASSES = { DESKTOP: 'desktop', ARM_HIGH: 'arm-high', MOBILE: 'mobile' };
+let DEVICE_CLASS = DEVICE_CLASSES.DESKTOP;
+const DEVICE_CPU_COEFF = { desktop: 1, 'arm-high': 0.9, mobile: 0.6 };
+const DEVICE_GPU_PENALTY = { desktop: 1, 'arm-high': 0.9, mobile: 0.65 };
+const MOBILE_GPU_SCALE = 0.7;
+const MOBILE_GPU_LOOP_FACTOR = 0.6;
+const MOBILE_GPU_DRAW_FACTOR = 0.6;
 const STRINGS = {
     zh: {
         unknownTier: '未知等級',
@@ -340,7 +378,10 @@ const STRINGS = {
         shareCopied: '已複製',
         noRecords: '尚無紀錄',
         leaderboardEmpty: '尚無紀錄',
-        historyItem: (idx, dt, h) => `${idx}. ${dt.toLocaleString()} | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | 單核 ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | 模式 ${h.mode || 'standard'} | 分辨率 ${h.gpuResScale || '-'}x | 核心 ${h.cores || '--'} | GPU型號 ${h.gpuModel || '--'}`
+        historyItem: (_idx, dt, h) => {
+            const cls = DEVICE_CLASS_LABEL.zh[h.deviceClass] || DEVICE_CLASS_LABEL.zh[DEVICE_CLASSES.DESKTOP];
+            return `${dt.toLocaleString()} | 類型 ${cls} | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | 單核 ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | 模式 ${h.mode || 'standard'} | 分辨率 ${h.gpuResScale || '-'}x | 核心 ${h.cores || '--'} | GPU型號 ${h.gpuModel || '--'}`;
+        }
     },
     en: {
         unknownTier: 'Unknown tier',
@@ -378,12 +419,27 @@ const STRINGS = {
         shareCopied: 'Copied',
         noRecords: 'No records yet',
         leaderboardEmpty: 'No records yet',
-        historyItem: (idx, dt, h) => `${idx}. ${dt.toLocaleString()} | CPU multi ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | Single ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | Mode ${h.mode || 'standard'} | Res ${h.gpuResScale || '-'}x | Cores ${h.cores || '--'} | GPU ${h.gpuModel || '--'}`
+        historyItem: (_idx, dt, h) => {
+            const cls = DEVICE_CLASS_LABEL.en[h.deviceClass] || DEVICE_CLASS_LABEL.en[DEVICE_CLASSES.DESKTOP];
+            return `${dt.toLocaleString()} | Device ${cls} | CPU multi ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | Single ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | Mode ${h.mode || 'standard'} | Res ${h.gpuResScale || '-'}x | Cores ${h.cores || '--'} | GPU ${h.gpuModel || '--'}`;
+        }
     }
 };
 const t = (key, ...args) => {
     const val = STRINGS[LANG]?.[key] ?? STRINGS.zh[key] ?? key;
     return typeof val === 'function' ? val(...args) : val;
+};
+const DEVICE_CLASS_LABEL = {
+    zh: {
+        [DEVICE_CLASSES.DESKTOP]: '桌機/筆電',
+        [DEVICE_CLASSES.ARM_HIGH]: '高階 ARM',
+        [DEVICE_CLASSES.MOBILE]: '行動裝置'
+    },
+    en: {
+        [DEVICE_CLASSES.DESKTOP]: 'Desktop/Laptop',
+        [DEVICE_CLASSES.ARM_HIGH]: 'High-Perf ARM',
+        [DEVICE_CLASSES.MOBILE]: 'Mobile'
+    }
 };
 
 const MODE_PROFILES = {
@@ -608,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 gpuTierScore: gpuResult.tierScore,
                 gpuTier: gpuResult.tierLabel,
                 mode: CURRENT_MODE,
-                gpuResScale: GPU_RES_SCALE,
+                gpuResScale: gpuResult.resScale ?? GPU_RES_SCALE,
                 cores: DETECTED_CORES,
                 gpuModel: DETECTED_GPU_MODEL,
                 browser: DETECTED_BROWSER,
@@ -618,7 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 storageRead: storageResult.readMBps,
                 netDownMbps: netResult.downMbps,
                 netLatencyMs: netResult.latencyMs,
-                netJitterMs: netResult.jitterMs
+                netJitterMs: netResult.jitterMs,
+                deviceClass: DEVICE_CLASS
             });
             renderHistory();
 
@@ -792,6 +849,7 @@ function detectSystemInfo() {
 
     // Advanced GPU Detection
     detectGPUModel();
+    updateDeviceClass();
 }
 
 function detectGPUModel() {
@@ -819,6 +877,7 @@ function detectGPUModel() {
                 gpuInfoEl.textContent = displayRenderer;
                 gpuInfoEl.title = renderer; 
                 DETECTED_GPU_MODEL = displayRenderer;
+                updateDeviceClass();
             } else {
                 gpuInfoEl.textContent = "Generic WebGL GPU";
             }
@@ -829,6 +888,17 @@ function detectGPUModel() {
         console.warn("GPU Detection failed", e);
         gpuInfoEl.textContent = "Unknown";
     }
+}
+
+function updateDeviceClass() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    const arch = (navigator.userAgentData && navigator.userAgentData.architecture || '').toLowerCase();
+    const isMobileUA = (navigator.userAgentData && navigator.userAgentData.mobile) || /android|iphone|ipad|ipod|mobile/.test(ua);
+    const gpu = (DETECTED_GPU_MODEL || '').toLowerCase();
+    const isAppleM = gpu.includes('apple m');
+    const isSnapdragonX = /snapdragon x/.test(ua) || gpu.includes('snapdragon x');
+    const isArmHigh = !isMobileUA && (isAppleM || isSnapdragonX || arch === 'arm');
+    DEVICE_CLASS = isMobileUA ? DEVICE_CLASSES.MOBILE : (isArmHigh ? DEVICE_CLASSES.ARM_HIGH : DEVICE_CLASSES.DESKTOP);
 }
 
 // ---------------- History helpers ----------------
@@ -1017,8 +1087,9 @@ async function runProfessionalCPUBenchmark() {
 
     // Config by mode
     const profile = MODE_PROFILES[CURRENT_MODE] || MODE_PROFILES.standard;
+    const durationScale = DEVICE_CLASS === DEVICE_CLASSES.MOBILE ? 1.2 : 1;
     const PASSES = profile.cpuPasses;
-    const DURATION_PER_PASS = profile.cpuDurationMs;
+    const DURATION_PER_PASS = Math.round(profile.cpuDurationMs * durationScale);
     const WARMUP_MS = profile.warmupMs;
     const TOTAL_DURATION = PASSES * DURATION_PER_PASS;
 
@@ -1065,13 +1136,13 @@ async function runProfessionalCPUBenchmark() {
         results.push(opsPerSec);
     }
 
-    // 3) Aggregate (best-of)
-    const maxOps = Math.max(...results);
-    const avgOps = results.reduce((a, b) => a + b, 0) / results.length;
+    // 3) Aggregate (best-of or sustained)
+    const aggregateOps = DEVICE_CLASS === DEVICE_CLASSES.MOBILE ? Math.min(...results) : Math.max(...results);
 
     // 4) Calibration to Cinebench-like scale
     const CALIBRATION_FACTOR = CPU_CALIBRATION_MULTIPLIER; // tune based on known baseline
-    const finalScore = Math.floor(maxOps * CALIBRATION_FACTOR);
+    const deviceCoeff = DEVICE_CPU_COEFF[DEVICE_CLASS] ?? 1;
+    const finalScore = Math.floor(aggregateOps * CALIBRATION_FACTOR * deviceCoeff);
 
     // 5) Update UI and tier
     cpuScoreEl.innerHTML = `${finalScore.toLocaleString()} <span class="text-sm text-gray-500 font-normal">pts</span>`;
@@ -1108,7 +1179,8 @@ async function runSingleCoreBenchmark(uiRefs = {}) {
 
     // Config (fixed 1s per pass, 3 passes)
     const PASSES = 3;
-    const DURATION_PER_PASS = 1000; // ms
+    const durationScale = DEVICE_CLASS === DEVICE_CLASSES.MOBILE ? 1.3 : 1;
+    const DURATION_PER_PASS = Math.round(1000 * durationScale); // ms
     const WARMUP_MS = 200;
     const TOTAL_DURATION = PASSES * DURATION_PER_PASS;
 
@@ -1162,8 +1234,9 @@ async function runSingleCoreBenchmark(uiRefs = {}) {
     }
 
     // Score with single-core calibration
-    const maxOps = Math.max(...results);
-    const finalScore = Math.floor(maxOps * CPU_SINGLE_CALIBRATION_MULTIPLIER);
+    const aggregateOps = DEVICE_CLASS === DEVICE_CLASSES.MOBILE ? Math.min(...results) : Math.max(...results);
+    const coeff = DEVICE_CPU_COEFF[DEVICE_CLASS] ?? 1;
+    const finalScore = Math.floor(aggregateOps * CPU_SINGLE_CALIBRATION_MULTIPLIER * coeff);
 
     if (score) score.innerHTML = `${finalScore.toLocaleString()} pts`;
     setStatus(t('singleDone'), 'text-green-500', 'text-primary');
@@ -1407,9 +1480,15 @@ async function runProfessionalGPUBenchmark() {
         const gpuScoreEl = document.getElementById('gpu-score');
         const gpuBar = document.getElementById('gpu-bar');
         const profile = MODE_PROFILES[CURRENT_MODE] || MODE_PROFILES.standard;
-        const gpuLoopIter = profile.gpuLoopIter;
-        const gpuDrawCalls = profile.gpuDrawCalls;
+        const isMobileDevice = DEVICE_CLASS === DEVICE_CLASSES.MOBILE;
+        const isArmHigh = DEVICE_CLASS === DEVICE_CLASSES.ARM_HIGH;
+        const gpuLoopIterBase = profile.gpuLoopIter;
+        const gpuDrawCallsBase = profile.gpuDrawCalls;
         const gpuDurationMs = profile.gpuDurationMs;
+        const gpuLoopIter = Math.max(80, Math.round(gpuLoopIterBase * (isMobileDevice ? MOBILE_GPU_LOOP_FACTOR : 1)));
+        const gpuDrawCalls = Math.max(8, Math.round(gpuDrawCallsBase * (isMobileDevice ? MOBILE_GPU_DRAW_FACTOR : 1)));
+        const appliedResScale = isMobileDevice ? Math.min(MOBILE_GPU_SCALE, GPU_RES_SCALE) : GPU_RES_SCALE;
+        const gpuPenalty = DEVICE_GPU_PENALTY[DEVICE_CLASS] ?? 1;
 
         gpuStatus.textContent = t('gpuStress');
         gpuStatus.classList.add('text-secondary');
@@ -1423,13 +1502,13 @@ async function runProfessionalGPUBenchmark() {
             gpuScoreEl.innerHTML = `0 <span class="text-sm text-gray-500 font-normal">fps</span>`;
             updateTierText('gpu-tier', { label: '--' });
             hideGpuPreview();
-            resolve({ fps: 0, tierScore: 0, tierLabel: '--' });
+            resolve({ fps: 0, tierScore: 0, tierLabel: '--', resScale: appliedResScale });
             return; 
         }
 
         // Use strict device pixel ratio and upscale to force more fragments
         const dpr = window.devicePixelRatio || 1;
-        const resScale = GPU_RES_SCALE; // standardized workload
+        const resScale = appliedResScale; // standardized workload (adaptive)
         canvas.width = canvas.clientWidth * dpr * resScale;
         canvas.height = canvas.clientHeight * dpr * resScale;
 
@@ -1446,7 +1525,7 @@ async function runProfessionalGPUBenchmark() {
              gpuStatus.classList.add('text-red-500');
              updateTierText('gpu-tier', { label: '--' });
              hideGpuPreview();
-             resolve({ fps: 0, tierScore: 0, tierLabel: '--' });
+             resolve({ fps: 0, tierScore: 0, tierLabel: '--', resScale: resScale });
              return;
         }
 
@@ -1596,12 +1675,13 @@ async function runProfessionalGPUBenchmark() {
             gpuStatus.classList.add('text-green-500');
 
             // Normalize GPU tier to align high-end cards (simple scaling with effective fps)
-            const gpuTierScore = Math.floor(gpuFpsEffective * 400); // 100fps -> 40,000 (maps to flagship tiers)
+            const gpuTierScoreRaw = Math.floor(gpuFpsEffective * 400); // 100fps -> 40,000 (maps to flagship tiers)
+            const gpuTierScore = Math.floor(gpuTierScoreRaw * gpuPenalty);
             const tier = getTier(gpuTierScore, 'gpu');
             updateTierText('gpu-tier', tier);
             
             hideGpuPreview();
-            resolve({ fps: gpuFpsEffective, tierScore: gpuTierScore, tierLabel: tier.label });
+            resolve({ fps: gpuFpsEffective, tierScore: gpuTierScore, tierLabel: tier.label, resScale: resScale });
         }, gpuDurationMs);
     });
 }
