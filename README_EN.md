@@ -4,6 +4,7 @@
 
 ## Live Demo
 - Netlify: <https://clever-biscotti-659db7.netlify.app/>
+- GitHub Pages: <https://fcyd5454.github.io/PerfX/>
 - Repo: <https://github.com/FCYD5454/PerfX>
 
 ## Highlights

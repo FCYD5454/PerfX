@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const history = loadHistory();
             if (!history.length) return;
             const h = history[0];
-            const share = `PerfX Benchmark: CPU ${h.cpuMulti ?? '--'} | GPU ${h.gpuFps ?? '--'}fps | RAM ${h.memGBs ?? '--'}GB/s | Net ${h.netDownMbps ?? '--'}Mbps | https://clever-biscotti-659db7.netlify.app/`;
+            const share = `PerfX Benchmark: CPU ${h.cpuMulti ?? '--'} | GPU ${h.gpuFps ?? '--'}fps | RAM ${h.memGBs ?? '--'}GB/s | Net ${h.netDownMbps ?? '--'}Mbps | https://fcyd5454.github.io/PerfX/`;
             navigator.clipboard.writeText(share).catch(()=>{});
             copyShareBtn.textContent = '已複製';
             setTimeout(() => copyShareBtn.textContent = '複製分享文字', 1200);
