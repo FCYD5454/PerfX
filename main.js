@@ -210,6 +210,17 @@ let HARDWARE_TIERS = {
         ,{ score: 1900, label: "Helio G85", desc: "Mobile Low-End", class: "text-gray-500", detail: "Entry Android" }
         ,{ score: 1600, label: "Snapdragon 662", desc: "Mobile Old Budget", class: "text-gray-500", detail: "Older budget" }
         ,{ score: 1200, label: "Helio A22", desc: "Mobile Entry", class: "text-gray-500", detail: "Basic phone" }
+        ,{ score: 20500, label: "M3 Max", desc: "Mobile King", class: "text-teal-500 font-bold", detail: "Apple Silicon" }
+        ,{ score: 16500, label: "M2 Pro", desc: "Mobile High End", class: "text-teal-500 font-bold", detail: "Apple Silicon" }
+        ,{ score: 9800, label: "Dimensity 9300", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "MediaTek Top" }
+        ,{ score: 9500, label: "A17 Pro", desc: "Mobile High End", class: "text-teal-500 font-semibold", detail: "iPhone 15 Pro" }
+        ,{ score: 7800, label: "Google Tensor G3", desc: "Mobile High-End", class: "text-teal-500 font-bold", detail: "Pixel 8 Pro" }
+        ,{ score: 6800, label: "Kirin 9000S", desc: "Mobile High-End", class: "text-teal-500 font-bold", detail: "Huawei Mate 60" }
+        ,{ score: 6200, label: "Snapdragon 7+ Gen 2", desc: "Mobile Sub-Flagship", class: "text-teal-500 font-medium", detail: "POCO F5" }
+        ,{ score: 4800, label: "Exynos 1480", desc: "Mobile Mid-Range", class: "text-teal-500 font-medium", detail: "Galaxy A55" }
+        ,{ score: 4500, label: "Dimensity 8300", desc: "Mobile Performance", class: "text-teal-500 font-medium", detail: "POCO X6 Pro" }
+        ,{ score: 4000, label: "Dimensity 6300", desc: "Mobile Entry 5G", class: "text-teal-500", detail: "vivo Y50 / Entry 5G" }
+        ,{ score: 3600, label: "Snapdragon 4 Gen 2", desc: "Mobile Entry 5G", class: "text-teal-500", detail: "Budget 5G" }
     ],
     gpu: [
         { score: 47023, label: "RTX 5090", desc: "Rank #1 - 96", class: "text-purple-600 font-black", detail: "Gaming: 100/100 | Nvidia" },
@@ -311,6 +322,14 @@ let HARDWARE_TIERS = {
         ,{ score: 380, label: "Mali-G52 MC2", desc: "Mobile Low-End", class: "text-gray-500", detail: "Helio G85 / G80" }
         ,{ score: 250, label: "PowerVR GE8320", desc: "Mobile Entry", class: "text-gray-500", detail: "Helio G25 / A22" }
         ,{ score: 150, label: "Adreno 505", desc: "Mobile Obsolete", class: "text-gray-500", detail: "Snapdragon 435" }
+        ,{ score: 3100, label: "Adreno 750", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "Snapdragon 8 Gen 3" }
+        ,{ score: 2800, label: "Immortalis-G720", desc: "Mobile Flagship", class: "text-teal-500 font-bold", detail: "Dimensity 9300" }
+        ,{ score: 2400, label: "Maleoon 910", desc: "Mobile High-End", class: "text-teal-500 font-bold", detail: "Kirin 9000S" }
+        ,{ score: 2100, label: "Mali-G715", desc: "Mobile High-End", class: "text-teal-500", detail: "Tensor G3 / D8300" }
+        ,{ score: 1400, label: "Xclipse 530", desc: "Mobile Mid-Range", class: "text-teal-500 font-medium", detail: "Exynos 1480 RDNA" }
+        ,{ score: 950, label: "Mali-G610 MC6", desc: "Mobile Mid-Range", class: "text-teal-500", detail: "Dimensity 8200 class" }
+        ,{ score: 800, label: "Mali-G57 MC2", desc: "Mobile Budget", class: "text-teal-500", detail: "Dimensity 6300/6020" }
+        ,{ score: 650, label: "Adreno 613", desc: "Mobile Entry", class: "text-gray-500", detail: "Snapdragon 4 Gen 2" }
     ]
 };
 
@@ -1674,12 +1693,14 @@ async function runProfessionalGPUBenchmark() {
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-green-500');
 
-            // Normalize GPU tier, accounting for mobile downscale & simplified workload
-            const gpuTierScoreRaw = Math.floor(gpuFpsEffective * 400); // base: 100fps -> 40,000
-            const downscalePenalty = (DEVICE_CLASS === DEVICE_CLASSES.MOBILE)
-                ? (resScale * resScale * MOBILE_GPU_LOOP_FACTOR * MOBILE_GPU_DRAW_FACTOR) // e.g., 0.7^2 * 0.6 * 0.6 ~= 0.1764
+            // Normalize GPU tier using rendered pixels-per-second to neutralize resolution differences
+            const renderedPixels = canvas.width * canvas.height;
+            const BASELINE_PPS = 1920 * 1080 * 60; // 1080p@60fps baseline (~RTX 4060 ref scale)
+            const workloadPenalty = (DEVICE_CLASS === DEVICE_CLASSES.MOBILE)
+                ? (MOBILE_GPU_LOOP_FACTOR * MOBILE_GPU_DRAW_FACTOR)
                 : 1;
-            const gpuTierScore = Math.floor(gpuTierScoreRaw * gpuPenalty * downscalePenalty);
+            const normalizedScore = (renderedPixels * gpuFpsEffective / BASELINE_PPS) * 10000;
+            const gpuTierScore = Math.floor(normalizedScore * gpuPenalty * workloadPenalty);
             const tier = getTier(gpuTierScore, 'gpu');
             updateTierText('gpu-tier', tier);
             
