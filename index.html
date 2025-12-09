@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PerfX | 瀏覽器極限效能測試</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#111827',
+                        darker: '#0B0F19',
+                        card: '#1F2937'
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas for dashboard export -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Chart.js for history trend -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-darker text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="border-b border-gray-800 bg-dark/50 backdrop-blur-md fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-gauge-high text-primary text-2xl mr-3"></i>
+                    <span class="font-bold text-xl tracking-wide">Perf<span class="text-primary">X</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="index.html" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">首頁</a>
+                        <a href="index.html#test-section" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">開始測試</a>
+                        <a href="ranking.html" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">排行榜</a>
+                        <a href="about.html" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">關於</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+<main id="main-content" class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div class="text-center py-16 lg:py-24">
+            <div id="hero-text-block" class="space-y-4">
+                <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight">
+                    釋放你的裝置 <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">極限潛能</span>
+                </h1>
+                <p class="max-w-2xl mx-auto text-xl text-gray-400">
+                    PerfX 提供專業級的瀏覽器端 CPU 與 GPU 效能評測。無需安裝，即點即測。
+                </p>
+            </div>
+            <!-- WebGL Preview (shown only during GPU test) -->
+            <div id="canvas-container" class="mt-8 mx-auto max-w-5xl h-72 w-full bg-black rounded-xl overflow-hidden border border-gray-700 hidden opacity-0 transition-opacity duration-300">
+                <canvas id="gl-canvas" class="w-full h-full"></canvas>
+                <div class="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded text-xs font-mono">WebGL Benchmark Preview</div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button id="start-btn" class="bg-primary hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-full transition transform hover:scale-105 shadow-lg shadow-blue-500/30 flex items-center">
+                        <i class="fa-solid fa-play mr-2"></i> 開始完整測試
+                    </button>
+                    <button id="single-core-btn" class="bg-secondary/20 hover:bg-secondary/30 text-secondary font-semibold py-4 px-8 rounded-full transition border border-secondary/40 flex items-center">
+                        <i class="fa-solid fa-bolt mr-2"></i> 單核快速測試
+                    </button>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <div class="flex items-center bg-card border border-gray-700 rounded-full px-3 py-2 text-sm text-gray-200 shadow">
+                        <label for="gpu-res-scale" class="mr-2 text-gray-400">GPU 分辨率:</label>
+                        <select id="gpu-res-scale" class="bg-card text-gray-100 focus:outline-none">
+                            <option value="1">1080p (1x)</option>
+                            <option value="1.33" selected>1440p / 2K (~1.33x)</option>
+                            <option value="1.6">2.5K (~1.6x)</option>
+                            <option value="2">4K (2x)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center bg-card border border-gray-700 rounded-full px-3 py-2 text-sm text-gray-200 shadow">
+                        <label for="mode-select" class="mr-2 text-gray-400">模式:</label>
+                        <select id="mode-select" class="bg-card text-gray-100 focus:outline-none">
+                            <option value="standard" selected>Standard</option>
+                            <option value="extreme">Extreme</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Exportable content wrapper -->
+        <div id="export-area" class="space-y-6 mt-8">
+
+            <!-- Dashboard (stacked sections) -->
+            <div id="dashboard" class="space-y-6 opacity-100 transition-opacity duration-700">
+
+                <!-- 系統概況 -->
+                <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl">
+                    <h3 class="text-lg font-semibold text-gray-400 mb-4">系統概況</h3>
+                    <ul class="space-y-3 text-sm" id="system-details">
+                        <li class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">瀏覽器</span>
+                            <span class="text-white font-mono" id="browser-info">Detecting...</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">邏輯核心數</span>
+                            <span class="text-white font-mono" id="cores-info">--</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">GPU 模型</span>
+                            <span class="text-white font-mono text-right ml-4" id="gpu-info">Detecting...</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-700 pb-2">
+                            <span class="text-gray-500">平台</span>
+                            <span class="text-white font-mono" id="platform-info">--</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CPU/ GPU Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- CPU 單核 -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-microchip text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">CPU 單核運算</h3>
+                        <div class="text-4xl font-bold text-white mb-4" id="cpu-single-score">-- <span class="text-sm text-gray-500 font-normal">pts</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="cpu-single-bar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="cpu-single-status">等待測試...</p>
+                        <p class="text-xs text-gray-400 mt-2" id="cpu-single-tier">等級：--</p>
+                    </div>
+
+                    <!-- CPU 多核 -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-microchip text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">CPU 多核運算</h3>
+                        <div class="text-4xl font-bold text-white mb-4" id="cpu-score">-- <span class="text-sm text-gray-500 font-normal">pts</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="cpu-bar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="cpu-status">等待測試...</p>
+                        <p class="text-xs text-gray-400 mt-2" id="cpu-tier">等級：--</p>
+                    </div>
+
+                    <!-- GPU -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-layer-group text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">GPU 渲染壓力</h3>
+                        <div class="text-4xl font-bold text-white mb-4" id="gpu-score">-- <span class="text-sm text-gray-500 font-normal">fps</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="gpu-bar" class="bg-secondary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="gpu-status">等待測試...</p>
+                        <p class="text-xs text-gray-400 mt-2" id="gpu-tier">等級：--</p>
+                    </div>
+                </div>
+
+                <!-- Memory / I/O / Network Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Memory Throughput -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-memory text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">記憶體吞吐量 (RAM Throughput)</h3>
+                        <div class="text-4xl font-bold text-white mb-4" id="mem-score">-- <span class="text-sm text-gray-500 font-normal">GB/s</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="mem-bar" class="bg-secondary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="mem-status">等待測試...</p>
+                    </div>
+
+                    <!-- Browser I/O -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-database text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">瀏覽器 I/O (Browser I/O)</h3>
+                        <div class="text-2xl font-bold text-white mb-2">
+                            <span id="storage-write-score">--</span> <span class="text-sm text-gray-500 font-normal">MB/s 寫入</span>
+                        </div>
+                        <div class="text-2xl font-bold text-white mb-4">
+                            <span id="storage-read-score">--</span> <span class="text-sm text-gray-500 font-normal">MB/s 讀取</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="storage-bar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="storage-status">等待測試...</p>
+                    </div>
+
+                    <!-- Network Speed -->
+                    <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                            <i class="fa-solid fa-wifi text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-400 mb-2">網路速度 (Cloudflare)</h3>
+                        <div class="text-2xl font-bold text-white mb-1">
+                            <span id="net-down">--</span> <span class="text-sm text-gray-500 font-normal">Mbps 下載</span>
+                        </div>
+                        <div class="text-sm text-gray-300 mb-2">
+                            延遲 <span id="net-latency">--</span> ms · 抖動 <span id="net-jitter">--</span> ms
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Server: Cloudflare CDN</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="net-bar" class="bg-secondary h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500" id="net-status">等待測試...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History & Trend -->
+            <div id="history-section" class="bg-card border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-200">歷史紀錄與趨勢 (History & Trend)</h3>
+                        <p class="text-sm text-gray-500">儲存於 localStorage；顯示最近 20 次完整測試</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="copy-share-btn" class="text-sm px-3 py-2 rounded bg-amber-500/80 hover:bg-amber-500 text-white transition">
+                            複製分享文字
+                        </button>
+                        <div class="relative">
+                            <button id="export-dropdown-btn" class="text-sm px-3 py-2 rounded bg-primary/80 hover:bg-primary text-white transition flex items-center gap-1">
+                                匯出 <i class="fa-solid fa-caret-down"></i>
+                            </button>
+                            <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-44 bg-card border border-gray-700 rounded shadow-lg z-10">
+                                <button id="export-dashboard-btn" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 text-white transition">匯出儀表板 PNG</button>
+                                <button id="export-png-btn" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 text-white transition">匯出 PNG</button>
+                                <button id="export-fullpage-btn" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 text-white transition">匯出全頁 PNG</button>
+                                <button id="export-history-btn" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 text-white transition">匯出 JSON</button>
+                            </div>
+                        </div>
+                        <button id="clear-history-btn" class="text-sm px-3 py-2 rounded bg-red-600/80 hover:bg-red-600 text-white transition">
+                            清除紀錄
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="lg:col-span-2 bg-darker border border-gray-700 rounded-xl p-4">
+                        <canvas id="history-chart" height="140"></canvas>
+                    </div>
+                    <div class="bg-darker border border-gray-700 rounded-xl p-4">
+                        <h4 class="text-sm text-gray-400 mb-2">最近紀錄</h4>
+                        <ul id="history-list" class="space-y-2 text-xs text-gray-200 font-mono max-h-64 overflow-y-auto pr-1">
+                            <li class="text-gray-500">尚無紀錄</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard & Compare -->
+            <div id="leaderboard-section" class="bg-card border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-200">本地排行榜 / 比較 (Local Leaderboard & Compare)</h3>
+                        <p class="text-sm text-gray-500">依歷史紀錄排序；僅儲存於本機</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-darker border border-gray-700 rounded-xl p-4">
+                        <h4 class="text-sm text-gray-400 mb-2">CPU 多核 Top 5</h4>
+                        <ul id="leaderboard-cpu" class="space-y-2 text-xs text-gray-200 font-mono">
+                            <li class="text-gray-500">尚無紀錄</li>
+                        </ul>
+                    </div>
+                    <div class="bg-darker border border-gray-700 rounded-xl p-4">
+                        <h4 class="text-sm text-gray-400 mb-2">GPU FPS Top 5</h4>
+                        <ul id="leaderboard-gpu" class="space-y-2 text-xs text-gray-200 font-mono">
+                            <li class="text-gray-500">尚無紀錄</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark py-8 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2023 PerfX Benchmark Suite. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

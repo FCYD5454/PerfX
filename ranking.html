@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PerfX | 硬體參考排行榜</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#111827',
+                        darker: '#0B0F19',
+                        card: '#1F2937'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-darker text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+    <nav class="border-b border-gray-800 bg-dark/50 backdrop-blur-md fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-gauge-high text-primary text-2xl mr-3"></i>
+                    <span class="font-bold text-xl tracking-wide">Perf<span class="text-primary">X</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="index.html" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">首頁</a>
+                        <a href="index.html#test-section" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">開始測試</a>
+                        <span class="text-white px-3 py-2 rounded-md text-sm font-medium">排行榜</span>
+                        <a href="index.html#about" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">關於</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">硬體參考排行榜</h1>
+            <p class="text-gray-400">資料來源：內建 HARDWARE_TIERS（Cinebench / Time Spy 對照），僅供分數解讀參考</p>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-gray-200">CPU Top 5 vs 你</h2>
+                    <span id="cpu-user-pill" class="text-xs text-gray-500"></span>
+                </div>
+                <canvas id="cpu-chart" height="180"></canvas>
+            </div>
+            <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-gray-200">GPU Top 5 vs 你</h2>
+                    <span id="gpu-user-pill" class="text-xs text-gray-500"></span>
+                </div>
+                <canvas id="gpu-chart" height="180"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-gray-200">CPU 排行 (前 88)</h2>
+                    <span class="text-xs text-gray-500">單位：Cinebench R23 近似分數</span>
+                </div>
+                <div class="mb-3">
+                    <input id="cpu-search" type="text" placeholder="搜尋型號..." class="w-full bg-darker border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary text-gray-200" />
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs text-gray-200 font-mono">
+                        <thead class="text-gray-400 border-b border-gray-700">
+                            <tr>
+                                <th class="py-2 pr-2 text-left">#</th>
+                                <th class="py-2 pr-2 text-left">型號</th>
+                                <th class="py-2 pr-2 text-left">分數</th>
+                                <th class="py-2 pr-2 text-left">描述</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cpu-ranking-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-2xl p-6 border border-gray-800 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-gray-200">GPU 排行 (前 88)</h2>
+                    <span class="text-xs text-gray-500">單位：3DMark Time Spy 近似分數</span>
+                </div>
+                <div class="mb-3">
+                    <input id="gpu-search" type="text" placeholder="搜尋型號..." class="w-full bg-darker border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary text-gray-200" />
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs text-gray-200 font-mono">
+                        <thead class="text-gray-400 border-b border-gray-700">
+                            <tr>
+                                <th class="py-2 pr-2 text-left">#</th>
+                                <th class="py-2 pr-2 text-left">型號</th>
+                                <th class="py-2 pr-2 text-left">分數</th>
+                                <th class="py-2 pr-2 text-left">描述</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gpu-ranking-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark py-8 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2023 PerfX Benchmark Suite. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+    // 取自 main.js 的 tiers，顯示前 88 筆
+    const HARDWARE_TIERS = {
+        cpu: [
+            { score: 42597, label: "Core i9 14900KS", desc: "" },
+            { score: 42377, label: "Ryzen 9 9950X3D", desc: "" },
+            { score: 42103, label: "Ryzen 9 9950X", desc: "" },
+            { score: 41782, label: "M3 Ultra", desc: "" },
+            { score: 41558, label: "Core Ultra 9 285K", desc: "" },
+            { score: 40616, label: "Core i9 14900KF", desc: "" },
+            { score: 40404, label: "Core i9 13900KS", desc: "" },
+            { score: 40400, label: "Core i9 14900K", desc: "" },
+            { score: 39012, label: "Core i9 13900KF", desc: "" },
+            { score: 38496, label: "Core i9 13900", desc: "" },
+            { score: 37486, label: "Core i9 13900K", desc: "" },
+            { score: 36742, label: "Ryzen 9 7950X", desc: "" },
+            { score: 36660, label: "Core i9 14900F", desc: "" },
+            { score: 36309, label: "Core Ultra 7 265K", desc: "" },
+            { score: 36291, label: "Ryzen 9 7950X3D", desc: "" },
+            { score: 35774, label: "Core i9 13900F", desc: "" },
+            { score: 35450, label: "Core Ultra 7 265KF", desc: "" },
+            { score: 35265, label: "Core i7 14700KF", desc: "" },
+            { score: 34895, label: "Core i7 14700K", desc: "" },
+            { score: 34549, label: "Ryzen 9 9900X3D", desc: "" },
+            { score: 33289, label: "Core Ultra 9 285", desc: "" },
+            { score: 33114, label: "Core i7 14700F", desc: "" },
+            { score: 33042, label: "Ryzen 9 9900X", desc: "" },
+            { score: 31070, label: "Core i9 14900", desc: "" },
+            { score: 30684, label: "Core Ultra 7 265", desc: "" },
+            { score: 30468, label: "Core i7 13700K", desc: "" },
+            { score: 30435, label: "Core i7 13700KF", desc: "" },
+            { score: 29300, label: "Ryzen 9 7900X", desc: "" },
+            { score: 28914, label: "Core Ultra 7 265F", desc: "" },
+            { score: 28398, label: "Core i7 14700", desc: "" },
+            { score: 27817, label: "Ryzen 9 7900X3D", desc: "" },
+            { score: 27341, label: "Core i9 12900K", desc: "" },
+            { score: 26017, label: "Ryzen 9 5950X", desc: "" },
+            { score: 25699, label: "Core i7 13700F", desc: "" },
+            { score: 25369, label: "Core i7 13700", desc: "" },
+            { score: 25270, label: "Core i5 14600K", desc: "" },
+            { score: 25182, label: "Core Ultra 5 245KF", desc: "" },
+            { score: 25085, label: "Core Ultra 5 245K", desc: "" },
+            { score: 24119, label: "Core i5 14600KF", desc: "" },
+            { score: 23710, label: "Core i5 13600KF", desc: "" },
+            { score: 23396, label: "Core i5 13600K", desc: "" },
+            { score: 23334, label: "Ryzen 7 9800X3D", desc: "" },
+            { score: 22970, label: "Core i7 12700K", desc: "" },
+            { score: 22876, label: "Ryzen 9 3950X", desc: "" },
+            { score: 22784, label: "Core i7 12700KF", desc: "" },
+            { score: 22768, label: "Core i5 14600", desc: "" },
+            { score: 22689, label: "Core Ultra 5 235", desc: "" },
+            { score: 22564, label: "Ryzen 7 7800X", desc: "" },
+            { score: 22117, label: "Core i5 13600", desc: "" },
+            { score: 22092, label: "Core i5 14500", desc: "" },
+            { score: 21007, label: "Core i5 13500", desc: "" },
+            { score: 20955, label: "Ryzen 9 5900", desc: "" },
+            { score: 20658, label: "Core i7 12700F", desc: "" },
+            { score: 20634, label: "Ryzen 9 5900X", desc: "" },
+            { score: 20588, label: "Ryzen 7 9700F", desc: "" },
+            { score: 20228, label: "Ryzen 7 9700X", desc: "" },
+            { score: 19872, label: "Ryzen 7 7700X", desc: "" },
+            { score: 19714, label: "Core i7 12700", desc: "" },
+            { score: 18760, label: "Ryzen 7 7700", desc: "" },
+            { score: 18682, label: "Ryzen 9 3900X", desc: "" },
+            { score: 18404, label: "Ryzen 9 3900XT", desc: "" },
+            { score: 18193, label: "Ryzen 7 7800X3D", desc: "" },
+            { score: 18049, label: "Ryzen 7 8700G", desc: "" },
+            { score: 17693, label: "Core i5 12600KF", desc: "" },
+            { score: 17662, label: "Ryzen 7 8700F", desc: "" },
+            { score: 17447, label: "Ryzen 5 9600X", desc: "" },
+            { score: 17333, label: "Core i5 12600K", desc: "" },
+            { score: 17325, label: "Core i9 10900KF", desc: "" },
+            { score: 17050, label: "Core Ultra 5 225", desc: "" },
+            { score: 16252, label: "Core i5 14400F", desc: "" },
+            { score: 16211, label: "Core i9 11900KF", desc: "" },
+            { score: 16112, label: "Core Ultra 5 225F", desc: "" },
+            { score: 15953, label: "Core i5 13400", desc: "" },
+            { score: 15926, label: "Core i5 14400", desc: "" },
+            { score: 15911, label: "Core i5 13400F", desc: "" },
+            { score: 15538, label: "Core i9 10850K", desc: "" },
+            { score: 15366, label: "Core i9 10900K", desc: "" },
+            { score: 15344, label: "Ryzen 7 5800X", desc: "" },
+            { score: 15210, label: "Ryzen 5 7600X", desc: "" },
+            { score: 15186, label: "Core i9 11900K", desc: "" },
+            { score: 15011, label: "Core i7 11700K", desc: "" },
+            { score: 15009, label: "Core i7 11700KF", desc: "" },
+            { score: 14804, label: "Ryzen 7 5800X3D", desc: "" },
+            { score: 14344, label: "Ryzen 5 7600", desc: "" },
+            { score: 14077, label: "Ryzen 7 5700X", desc: "" },
+            { score: 14065, label: "Ryzen 7 5800", desc: "" },
+            { score: 14047, label: "Ryzen 7 5700G", desc: "" },
+            { score: 13848, label: "Ryzen 7 3800X", desc: "" },
+            { score: 13809, label: "Ryzen 5 7500F", desc: "" },
+            { score: 13628, label: "Ryzen 5 8600G", desc: "" },
+            { score: 13535, label: "Ryzen 7 5700X3D", desc: "" },
+            { score: 13508, label: "Ryzen 5 7400F", desc: "" },
+            { score: 13491, label: "Core i5 12600", desc: "" },
+            { score: 13469, label: "Ryzen 5 7600X3D", desc: "" },
+            { score: 13399, label: "Core i9 10900", desc: "" },
+            { score: 13315, label: "Core i9 11900", desc: "" },
+            { score: 12955, label: "Ryzen 7 3800XT", desc: "" },
+            { score: 12803, label: "Ryzen 5 9500F", desc: "" },
+            { score: 12678, label: "Core i7 10700KF", desc: "" },
+            { score: 12678, label: "Core i7 10700K", desc: "" },
+            { score: 12528, label: "Core i5 12500", desc: "" },
+            { score: 12470, label: "Core i9 9900K", desc: "" },
+            { score: 12250, label: "Core i7 10700F", desc: "" },
+            { score: 12195, label: "Ryzen 7 3700X", desc: "" },
+            { score: 12047, label: "Core i5 12400F", desc: "" },
+            { score: 12023, label: "Core i5 12400", desc: "" },
+            { score: 11838, label: "Ryzen 5 5600X", desc: "" },
+            { score: 11520, label: "Ryzen 5 8500G", desc: "" },
+            { score: 11311, label: "Core i5 11600K", desc: "" },
+            { score: 11277, label: "Core i5 11600KF", desc: "" },
+            { score: 11072, label: "Core i7 11700", desc: "" },
+            { score: 11069, label: "Core i7 11700F", desc: "" },
+            { score: 10972, label: "Ryzen 5 8400F", desc: "" },
+            { score: 10898, label: "Ryzen 5 5600", desc: "" },
+            { score: 10860, label: "Ryzen 5 5600G", desc: "" },
+            { score: 10502, label: "Ryzen 5 5600F", desc: "" },
+            { score: 10489, label: "Core i5 10600KF", desc: "" },
+            { score: 10489, label: "Core i5 10600K", desc: "" },
+            { score: 10412, label: "Ryzen 5 5500", desc: "" },
+            { score: 10235, label: "Core i5 11400F", desc: "" },
+            { score: 10232, label: "Ryzen 7 5600X3D", desc: "" },
+            { score: 10140, label: "Ryzen 7 2700X", desc: "" },
+            { score: 9810, label: "Ryzen 5 5500X3D", desc: "" },
+            { score: 9696, label: "Ryzen 5 3600XT", desc: "" },
+            { score: 9689, label: "Ryzen 3 8300G", desc: "" },
+            { score: 9623, label: "Core i5 11400", desc: "" },
+            { score: 9526, label: "Ryzen 5 3600X", desc: "" },
+            { score: 9501, label: "Ryzen 5 3600", desc: "" },
+            { score: 9428, label: "Core i7 9700K", desc: "" },
+            { score: 9348, label: "Ryzen 5 4600G", desc: "" },
+            { score: 9305, label: "Ryzen 5 4500", desc: "" },
+            { score: 9258, label: "Ryzen 5 Pro 4650G", desc: "" },
+            { score: 9112, label: "Core i3 14100", desc: "" },
+            { score: 8947, label: "Ryzen 7 2700", desc: "" },
+            { score: 8839, label: "Core i7 8700K", desc: "" },
+            { score: 8805, label: "Core i3 13100F", desc: "" },
+            { score: 8794, label: "Core i3 14100F", desc: "" },
+            { score: 8636, label: "Core i3 13100", desc: "" },
+            { score: 8540, label: "Core i7 9700", desc: "" },
+            { score: 8532, label: "Core i7 10700", desc: "" },
+            { score: 8452, label: "Ryzen 3 5300G", desc: "" },
+            { score: 8447, label: "Core i3 12100F", desc: "" },
+            { score: 8209, label: "Core i5 10500", desc: "" },
+            { score: 8061, label: "Core i3 12100", desc: "" },
+            { score: 7614, label: "Core i5 10400", desc: "" },
+            { score: 7610, label: "Core i5 10400F", desc: "" },
+            { score: 7523, label: "Ryzen 5 2600X", desc: "" },
+            { score: 7428, label: "Core i5 10500T", desc: "" },
+            { score: 7125, label: "Core i7 8700", desc: "" },
+            { score: 7089, label: "Ryzen 5 2600", desc: "" },
+            { score: 6775, label: "Core i5 8600K", desc: "" },
+            { score: 6596, label: "Core i5 9600K", desc: "" },
+            { score: 6230, label: "Ryzen 5 1600", desc: "" },
+            { score: 6060, label: "Ryzen 3 4100", desc: "" },
+            { score: 5993, label: "Core i5 9500", desc: "" },
+            { score: 5902, label: "Core i7 7700K", desc: "" },
+            { score: 5852, label: "Core i5 8400", desc: "" },
+            { score: 5737, label: "Core i3 10105F", desc: "" },
+            { score: 5644, label: "Core i7 6700K", desc: "" },
+            { score: 5612, label: "Core i3 10100F", desc: "" },
+            { score: 5612, label: "Core i3 10100", desc: "" },
+            { score: 5581, label: "Core i5 9400F", desc: "" },
+            { score: 5539, label: "Core i5 8500", desc: "" },
+            { score: 5439, label: "Core i7 7700", desc: "" },
+            { score: 5423, label: "Ryzen 3 3100", desc: "" },
+            { score: 4840, label: "Core i7 670", desc: "" },
+            { score: 4810, label: "Ryzen 5 3400G", desc: "" },
+            { score: 4800, label: "Ryzen 5 2400G", desc: "" },
+            { score: 4155, label: "Core i3 9100F", desc: "" },
+            { score: 3965, label: "Core i5 6600K", desc: "" },
+            { score: 3607, label: "Core i3 8100", desc: "" },
+            { score: 3587, label: "Ryzen 3 2200G", desc: "" },
+            { score: 3415, label: "Processor N150", desc: "" },
+            { score: 3380, label: "Core i5 7400", desc: "" },
+            { score: 3361, label: "Core i5 6500", desc: "" },
+            { score: 3317, label: "Ryzen 3 3200G", desc: "" },
+            { score: 3049, label: "Processor N250", desc: "" }
+        ],
+        gpu: [
+            { score: 47023, label: "RTX 5090", desc: "" },
+            { score: 36318, label: "RTX 4090", desc: "" },
+            { score: 32989, label: "RTX 5080", desc: "" },
+            { score: 30711, label: "RX 7900 XTX", desc: "" },
+            { score: 29924, label: "RX 9070 XT", desc: "" },
+            { score: 28287, label: "RTX 4080 SUPER", desc: "" },
+            { score: 28166, label: "RTX 4080", desc: "" },
+            { score: 27784, label: "RTX 5070 Ti", desc: "" },
+            { score: 27022, label: "RX 7900 XT", desc: "" },
+            { score: 26999, label: "RX 9070", desc: "" },
+            { score: 24723, label: "RTX 6000 Ada", desc: "" },
+            { score: 24222, label: "RTX 4070 Ti SUPER", desc: "" },
+            { score: 22757, label: "RTX 4070 Ti", desc: "" },
+            { score: 22660, label: "RTX 5070", desc: "" },
+            { score: 22509, label: "RX 7900 GRE", desc: "" },
+            { score: 21849, label: "RTX 3090 Ti", desc: "" },
+            { score: 21584, label: "RX 6950 XT", desc: "" },
+            { score: 20886, label: "RTX 4070 SUPER", desc: "" },
+            { score: 20797, label: "RX 6900 XT", desc: "" },
+            { score: 19814, label: "RTX 4500 Ada", desc: "" },
+            { score: 20092, label: "RX 7800 XT", desc: "" },
+            { score: 19899, label: "RTX 3090", desc: "" },
+            { score: 19631, label: "RTX 3080 Ti", desc: "" },
+            { score: 19361, label: "RX 6800 XT", desc: "" },
+            { score: 17814, label: "RTX 4070", desc: "" },
+            { score: 17663, label: "RTX 3080", desc: "" },
+            { score: 17101, label: "RX 7700 XT", desc: "" },
+            { score: 16468, label: "RX 9060 XT", desc: "" },
+            { score: 16212, label: "RX 6800", desc: "" },
+            { score: 16030, label: "RTX 5060 Ti (16GB)", desc: "" },
+            { score: 15626, label: "RTX 5060 Ti (8GB)", desc: "" },
+            { score: 14877, label: "RTX 3070 Ti", desc: "" },
+            { score: 14657, label: "RTX 2080 Ti", desc: "" },
+            { score: 14654, label: "Arc B580", desc: "" },
+            { score: 14463, label: "RTX 4000 Ada", desc: "" },
+            { score: 14307, label: "RTX 5000 Ada", desc: "" },
+            { score: 13703, label: "RTX 5060", desc: "" },
+            { score: 13642, label: "RTX 3070", desc: "" },
+            { score: 13556, label: "Arc A770", desc: "" },
+            { score: 13552, label: "RX 6750 XT", desc: "" },
+            { score: 13488, label: "RTX 4060 Ti 8GB", desc: "" },
+            { score: 13463, label: "RTX 4060 Ti 16GB", desc: "" },
+            { score: 12813, label: "RX 6700 XT", desc: "" },
+            { score: 12487, label: "Arc B570", desc: "" },
+            { score: 12435, label: "Arc A750", desc: "" },
+            { score: 11706, label: "RTX 3060 Ti", desc: "" },
+            { score: 11622, label: "RTX 2080 SUPER", desc: "" },
+            { score: 11153, label: "RX 7600 XT", desc: "" },
+            { score: 11080, label: "RTX 2080", desc: "" },
+            { score: 10949, label: "RX 7600", desc: "" },
+            { score: 10832, label: "Arc A580", desc: "" },
+            { score: 10621, label: "RTX 4060", desc: "" },
+            { score: 10405, label: "RX 6600", desc: "" },
+            { score: 10301, label: "RTX 5050", desc: "" },
+            { score: 10168, label: "RTX 2070 SUPER", desc: "" },
+            { score: 9982, label: "GTX 1080 Ti", desc: "" },
+            { score: 9904, label: "RX 6650 XT", desc: "" },
+            { score: 9643, label: "RX 6600 XT", desc: "" },
+            { score: 9422, label: "RX 5700 XT", desc: "" },
+            { score: 9080, label: "RTX 2070", desc: "" },
+            { score: 8500, label: "RTX 2000 Ada", desc: "" },
+            { score: 8751, label: "RTX 3060", desc: "" },
+            { score: 8734, label: "RTX 2060 SUPER", desc: "" },
+            { score: 7632, label: "RX 5600 XT", desc: "" },
+            { score: 7592, label: "GTX 1080", desc: "" },
+            { score: 7567, label: "RTX 2060", desc: "" },
+            { score: 6842, label: "GTX 1070 Ti", desc: "" },
+            { score: 6341, label: "GTX 1660 Ti", desc: "" },
+            { score: 6232, label: "RTX 3050", desc: "" },
+            { score: 6091, label: "GTX 1070", desc: "" },
+            { score: 6045, label: "GTX 1660 SUPER", desc: "" },
+            { score: 5856, label: "GTX 980 Ti", desc: "" },
+            { score: 5443, label: "GTX 1660", desc: "" },
+            { score: 4946, label: "RX 6500 XT", desc: "" },
+            { score: 4854, label: "RX 5500 XT", desc: "" },
+            { score: 4778, label: "RX 590", desc: "" },
+            { score: 4691, label: "GTX 1650 SUPER", desc: "" },
+            { score: 4354, label: "RX 580", desc: "" },
+            { score: 4264, label: "Arc A380", desc: "" },
+            { score: 4203, label: "GTX 1060", desc: "" },
+            { score: 3855, label: "RX 570", desc: "" },
+            { score: 3562, label: "GTX 1650", desc: "" },
+            { score: 2352, label: "GTX 1050 Ti", desc: "" },
+            { score: 2302, label: "GTX 960", desc: "" },
+            { score: 1854, label: "RX 560", desc: "" },
+            { score: 1736, label: "GTX 1050", desc: "" }
+        ]
+    };
+
+    function parseUserParams() {
+        const params = new URLSearchParams(window.location.search);
+        const cpu = params.get('cpu');
+        const gpu = params.get('gpu');
+        const tier = params.get('tier');
+        return {
+            cpuScore: cpu ? Number(cpu) : null,
+            gpuScore: gpu ? Number(gpu) : null,
+            tier: tier || null
+        };
+    }
+
+    function findClosestIndex(list, score) {
+        if (!score || !Array.isArray(list) || !list.length) return -1;
+        let bestIdx = -1;
+        let bestDiff = Infinity;
+        list.forEach((item, idx) => {
+            const diff = Math.abs(item.score - score);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestIdx = idx;
+            }
+        });
+        return bestIdx;
+    }
+
+    function renderTables() {
+        const cpuBody = document.getElementById('cpu-ranking-body');
+        const gpuBody = document.getElementById('gpu-ranking-body');
+        const cpuSearch = document.getElementById('cpu-search')?.value.toLowerCase().trim() || '';
+        const gpuSearch = document.getElementById('gpu-search')?.value.toLowerCase().trim() || '';
+        const { cpuScore, gpuScore } = parseUserParams();
+
+        const cpuList = HARDWARE_TIERS.cpu.slice(0, 88).filter(item => item.label.toLowerCase().includes(cpuSearch));
+        const gpuList = HARDWARE_TIERS.gpu.slice(0, 88).filter(item => item.label.toLowerCase().includes(gpuSearch));
+
+        const cpuHighlightIdx = findClosestIndex(cpuList, cpuScore);
+        const gpuHighlightIdx = findClosestIndex(gpuList, gpuScore);
+
+        const cpuRows = cpuList.map((item, idx) => {
+            const highlight = idx === cpuHighlightIdx ? 'bg-primary/10' : '';
+            return `
+            <tr class="border-b border-gray-800">
+                <td class="py-1 pr-2 text-gray-400">${idx + 1}</td>
+                <td class="py-1 pr-2">${item.label}</td>
+                <td class="py-1 pr-2 text-gray-300">${item.score.toLocaleString()}</td>
+                <td class="py-1 pr-2 text-gray-500">${item.desc || ''}</td>
+            </tr>
+            `;
+        }).join('');
+
+        const gpuRows = gpuList.map((item, idx) => {
+            const highlight = idx === gpuHighlightIdx ? 'bg-secondary/10' : '';
+            return `
+            <tr class="border-b border-gray-800">
+                <td class="py-1 pr-2 text-gray-400">${idx + 1}</td>
+                <td class="py-1 pr-2">${item.label}</td>
+                <td class="py-1 pr-2 text-gray-300">${item.score.toLocaleString()}</td>
+                <td class="py-1 pr-2 text-gray-500">${item.desc || ''}</td>
+            </tr>
+            `;
+        }).join('');
+
+        const userCpuRow = cpuScore ? `
+            <tr class="border-b border-amber-500/60 bg-amber-500/10 text-amber-200">
+                <td class="py-1 pr-2">🔥</td>
+                <td class="py-1 pr-2">你的裝置 (CPU)</td>
+                <td class="py-1 pr-2">${cpuScore.toLocaleString()}</td>
+                <td class="py-1 pr-2">${parseUserParams().tier || ''}</td>
+            </tr>` : '';
+        const userGpuRow = gpuScore ? `
+            <tr class="border-b border-emerald-500/60 bg-emerald-500/10 text-emerald-200">
+                <td class="py-1 pr-2">🔥</td>
+                <td class="py-1 pr-2">你的裝置 (GPU)</td>
+                <td class="py-1 pr-2">${gpuScore.toLocaleString()}</td>
+                <td class="py-1 pr-2">${parseUserParams().tier || ''}</td>
+            </tr>` : '';
+
+        cpuBody.innerHTML = (userCpuRow + cpuRows) || `<tr><td colspan="4" class="py-2 text-gray-500">無資料</td></tr>`;
+        gpuBody.innerHTML = (userGpuRow + gpuRows) || `<tr><td colspan="4" class="py-2 text-gray-500">無資料</td></tr>`;
+    }
+
+    function renderCharts() {
+        const { cpuScore, gpuScore } = parseUserParams();
+        const cpuTop = HARDWARE_TIERS.cpu.slice(0, 5);
+        const gpuTop = HARDWARE_TIERS.gpu.slice(0, 5);
+        const cpuLabels = cpuTop.map(i => i.label);
+        const cpuData = cpuTop.map(i => i.score);
+        const gpuLabels = gpuTop.map(i => i.label);
+        const gpuData = gpuTop.map(i => i.score);
+
+        if (cpuScore) {
+            cpuLabels.push('Your CPU');
+            cpuData.push(cpuScore);
+            document.getElementById('cpu-user-pill').textContent = `你的 CPU: ${cpuScore.toLocaleString()} pts`;
+        } else {
+            document.getElementById('cpu-user-pill').textContent = '未偵測到參數';
+        }
+        if (gpuScore) {
+            gpuLabels.push('Your GPU');
+            gpuData.push(gpuScore);
+            document.getElementById('gpu-user-pill').textContent = `你的 GPU: ${gpuScore.toLocaleString()} pts`;
+        } else {
+            document.getElementById('gpu-user-pill').textContent = '未偵測到參數';
+        }
+
+        const cpuCtx = document.getElementById('cpu-chart');
+        const gpuCtx = document.getElementById('gpu-chart');
+        if (cpuCtx) {
+            new Chart(cpuCtx, {
+                type: 'bar',
+                data: {
+                    labels: cpuLabels,
+                    datasets: [{
+                        label: 'Score',
+                        data: cpuData,
+                        backgroundColor: cpuLabels.map(l => l === 'Your CPU' ? 'rgba(251, 191, 36, 0.6)' : 'rgba(59, 130, 246, 0.6)'),
+                        borderColor: cpuLabels.map(l => l === 'Your CPU' ? 'rgba(251, 191, 36, 1)' : 'rgba(59, 130, 246, 1)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { color: '#9CA3AF' } }, x: { ticks: { color: '#9CA3AF' } } }
+                }
+            });
+        }
+        if (gpuCtx) {
+            new Chart(gpuCtx, {
+                type: 'bar',
+                data: {
+                    labels: gpuLabels,
+                    datasets: [{
+                        label: 'Score',
+                        data: gpuData,
+                        backgroundColor: gpuLabels.map(l => l === 'Your GPU' ? 'rgba(16, 185, 129, 0.6)' : 'rgba(99, 102, 241, 0.6)'),
+                        borderColor: gpuLabels.map(l => l === 'Your GPU' ? 'rgba(16, 185, 129, 1)' : 'rgba(99, 102, 241, 1)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { color: '#9CA3AF' } }, x: { ticks: { color: '#9CA3AF' } } }
+                }
+            });
+        }
+    }
+
+    function bindSearch() {
+        const cpuSearch = document.getElementById('cpu-search');
+        const gpuSearch = document.getElementById('gpu-search');
+        cpuSearch?.addEventListener('input', renderTables);
+        gpuSearch?.addEventListener('input', renderTables);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        bindSearch();
+        renderTables();
+        renderCharts();
+    });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,24 @@
+/* Custom styles to supplement Tailwind */
+body {
+    background-image: radial-gradient(circle at top center, #1f2937 0%, #0b0f19 70%);
+    background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
