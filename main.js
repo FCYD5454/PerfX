@@ -302,6 +302,89 @@ const NET_PINGS = 8;               // number of latency samples
 const NET_TIMEOUT_MS = 8000;       // per request timeout
 const NET_DOWNLOAD_URL = "https://speed.cloudflare.com/__down?bytes=5000000"; // 5MB
 const NET_LATENCY_URL = "https://speed.cloudflare.com/__down?bytes=0";       // tiny ping
+const LANG = ((document.documentElement.lang || '').toLowerCase().startsWith('en')) ? 'en' : 'zh';
+const STRINGS = {
+    zh: {
+        unknownTier: '未知等級',
+        tierPrefix: '等級：',
+        waiting: '等待測試...',
+        testing: '測試進行中...',
+        testAgain: '再次測試',
+        testAborted: '測試中斷',
+        testFailedConsole: '測試失敗 (請查看 Console)',
+        testFailed: '測試失敗',
+        singleTesting: '單核測試中...',
+        singleReady: '單核快速測試',
+        singleFailed: '測試失敗',
+        singleWarmup: '單核預熱中...',
+        singleProgress: (p, total) => `單核測試中 (${p}/${total})...`,
+        singleDone: '單核測試完成',
+        cpuWarmup: '預熱中...',
+        cpuProgress: (p, total) => `測試中 (${p}/${total})...`,
+        cpuDone: (s) => `測試完成 (${s.toFixed(1)}s)`,
+        memTesting: '記憶體吞吐量測試中 (RAM Throughput)...',
+        memDone: (s) => `完成 (${s}s)`,
+        ioNotSupported: '瀏覽器 I/O：IndexedDB 不支援，測試略過',
+        ioWrite: '瀏覽器 I/O 寫入測試中...',
+        ioRead: '瀏覽器 I/O 讀取測試中...',
+        ioDoneCache: '瀏覽器 I/O 測試完成（可能為系統快取，建議冷啟再測）',
+        ioDone: '瀏覽器 I/O 測試完成',
+        netLatency: '網路延遲測試中...',
+        netDownload: '下載測試中 (Cloudflare 5MB)...',
+        netDone: '網路測試完成',
+        gpuFailCanvas: '測試失敗 (Canvas Missing)',
+        gpuFailWebGL: 'WebGL 初始化失敗或不支援',
+        gpuStress: '正在進行極限渲染 (Extreme GPU Stress)...',
+        gpuDone: (iter, draws) => `測試完成 (負載 x ${iter} 迭代, ${draws}x draws/frame)`,
+        shareIdle: '複製分享文字',
+        shareCopied: '已複製',
+        noRecords: '尚無紀錄',
+        leaderboardEmpty: '尚無紀錄',
+        historyItem: (idx, dt, h) => `${idx}. ${dt.toLocaleString()} | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | 單核 ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | 模式 ${h.mode || 'standard'} | 分辨率 ${h.gpuResScale || '-'}x | 核心 ${h.cores || '--'} | GPU型號 ${h.gpuModel || '--'}`
+    },
+    en: {
+        unknownTier: 'Unknown tier',
+        tierPrefix: 'Tier: ',
+        waiting: 'Waiting...',
+        testing: 'Testing...',
+        testAgain: 'Run again',
+        testAborted: 'Test aborted',
+        testFailedConsole: 'Test failed (see console)',
+        testFailed: 'Test failed',
+        singleTesting: 'Single-core testing...',
+        singleReady: 'Single-Core Quick Test',
+        singleFailed: 'Test failed',
+        singleWarmup: 'Single-core warmup...',
+        singleProgress: (p, total) => `Single-core testing (${p}/${total})...`,
+        singleDone: 'Single-core test done',
+        cpuWarmup: 'Warming up...',
+        cpuProgress: (p, total) => `Testing (${p}/${total})...`,
+        cpuDone: (s) => `Test finished (${s.toFixed(1)}s)`,
+        memTesting: 'RAM throughput testing...',
+        memDone: (s) => `Done (${s}s)`,
+        ioNotSupported: 'Browser I/O: IndexedDB not supported, skipped',
+        ioWrite: 'Browser I/O writing...',
+        ioRead: 'Browser I/O reading...',
+        ioDoneCache: 'Browser I/O done (possibly cache, try cold)',
+        ioDone: 'Browser I/O done',
+        netLatency: 'Network latency testing...',
+        netDownload: 'Downloading (Cloudflare 5MB)...',
+        netDone: 'Network test done',
+        gpuFailCanvas: 'Test failed (Canvas Missing)',
+        gpuFailWebGL: 'WebGL init failed or not supported',
+        gpuStress: 'Running extreme GPU stress...',
+        gpuDone: (iter, draws) => `Test done (load x ${iter} iterations, ${draws}x draws/frame)`,
+        shareIdle: 'Copy share text',
+        shareCopied: 'Copied',
+        noRecords: 'No records yet',
+        leaderboardEmpty: 'No records yet',
+        historyItem: (idx, dt, h) => `${idx}. ${dt.toLocaleString()} | CPU multi ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | Single ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | Mode ${h.mode || 'standard'} | Res ${h.gpuResScale || '-'}x | Cores ${h.cores || '--'} | GPU ${h.gpuModel || '--'}`
+    }
+};
+const t = (key, ...args) => {
+    const val = STRINGS[LANG]?.[key] ?? STRINGS.zh[key] ?? key;
+    return typeof val === 'function' ? val(...args) : val;
+};
 
 const MODE_PROFILES = {
     standard: {
@@ -354,7 +437,7 @@ function hideGpuPreview() {
 function getTier(score, type) {
     const tiers = HARDWARE_TIERS[type] || [];
     // Choose the closest tier by absolute difference to reduce jitter between runs
-    let match = tiers[tiers.length - 1] || { label: "未知等級", class: "text-gray-400", desc: "", detail: "" };
+    let match = tiers[tiers.length - 1] || { label: t('unknownTier'), class: "text-gray-400", desc: "", detail: "" };
     let bestDiff = Number.POSITIVE_INFINITY;
     for (const t of tiers) {
         const diff = Math.abs(score - t.score);
@@ -371,7 +454,7 @@ function getTier(score, type) {
 function updateTierText(elementId, tier) {
     const el = document.getElementById(elementId);
     if (!el) return;
-    el.textContent = `等級：${tier.label}`;
+    el.textContent = `${t('tierPrefix')}${tier.label}`;
 }
 
 // Expose to global scope to avoid reference errors inside other closures
@@ -436,29 +519,29 @@ document.addEventListener('DOMContentLoaded', () => {
         gpuScoreEl.innerHTML = '-- <span class="text-sm text-gray-500 font-normal">fps</span>';
         if (cpuSingleBar) cpuSingleBar.style.width = '0%';
         if (cpuSingleScoreEl) cpuSingleScoreEl.innerHTML = '-- <span class="text-sm text-gray-500 font-normal">pts</span>';
-        if (cpuSingleStatus) cpuSingleStatus.textContent = "等待測試...";
-        if (cpuSingleTierEl) cpuSingleTierEl.textContent = "等級：--";
+        if (cpuSingleStatus) cpuSingleStatus.textContent = t('waiting');
+        if (cpuSingleTierEl) cpuSingleTierEl.textContent = `${t('tierPrefix')}--`;
         if (memBar) memBar.style.width = '0%';
         if (memScoreEl) memScoreEl.innerHTML = '-- <span class="text-sm text-gray-500 font-normal">GB/s</span>';
-        if (memStatus) memStatus.textContent = "等待測試...";
+        if (memStatus) memStatus.textContent = t('waiting');
         if (storageBar) storageBar.style.width = '0%';
         if (storageWriteScoreEl) storageWriteScoreEl.textContent = '--';
         if (storageReadScoreEl) storageReadScoreEl.textContent = '--';
-        if (storageStatus) storageStatus.textContent = "等待測試...";
+        if (storageStatus) storageStatus.textContent = t('waiting');
         if (netBar) netBar.style.width = '0%';
         if (netDownEl) netDownEl.textContent = '--';
         if (netLatencyEl) netLatencyEl.textContent = '--';
         if (netJitterEl) netJitterEl.textContent = '--';
-        if (netStatus) netStatus.textContent = "等待測試...";
+        if (netStatus) netStatus.textContent = t('waiting');
         
         cpuStatus.classList.remove('text-green-500', 'text-red-500');
         gpuStatus.classList.remove('text-green-500', 'text-red-500');
-        cpuStatus.textContent = "等待測試...";
-        gpuStatus.textContent = "等待測試...";
+        cpuStatus.textContent = t('waiting');
+        gpuStatus.textContent = t('waiting');
         if (cpuSingleBar) cpuSingleBar.style.width = '0%';
         if (cpuSingleScoreEl) cpuSingleScoreEl.innerHTML = '-- <span class="text-sm text-gray-500 font-normal">pts</span>';
-        if (cpuSingleStatus) cpuSingleStatus.textContent = "等待測試...";
-        if (cpuSingleTierEl) cpuSingleTierEl.textContent = "等級：--";
+        if (cpuSingleStatus) cpuSingleStatus.textContent = t('waiting');
+        if (cpuSingleTierEl) cpuSingleTierEl.textContent = `${t('tierPrefix')}--`;
 
         // Update GPU resolution scale from user selection
         if (gpuResSelect) {
@@ -471,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reveal Dashboard
         dashboard.classList.remove('opacity-0');
         startBtn.disabled = true;
-        startBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> 測試進行中...';
+        startBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> ${t('testing')}`;
         startBtn.classList.remove('bg-red-600', 'bg-secondary', 'bg-primary');
         startBtn.classList.add('bg-primary', 'opacity-75', 'cursor-not-allowed');
 
@@ -540,17 +623,17 @@ document.addEventListener('DOMContentLoaded', () => {
             renderHistory();
 
             // Finish
-            startBtn.innerHTML = '<i class="fa-solid fa-rotate-right mr-2"></i> 再次測試';
+            startBtn.innerHTML = `<i class="fa-solid fa-rotate-right mr-2"></i> ${t('testAgain')}`;
             startBtn.classList.remove('bg-primary');
             startBtn.classList.add('bg-secondary');
         } catch (e) {
             console.error(e);
-            startBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> 測試中斷';
+            startBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${t('testAborted')}`;
             startBtn.classList.remove('bg-primary', 'bg-secondary');
             startBtn.classList.add('bg-red-600');
             // Try to show error in UI if possible
-            if(cpuStatus.textContent.includes('...')) cpuStatus.textContent = "測試失敗 (請查看 Console)";
-            if(gpuStatus.textContent.includes('...')) gpuStatus.textContent = "測試失敗";
+            if(cpuStatus.textContent.includes('...')) cpuStatus.textContent = t('testFailedConsole');
+            if(gpuStatus.textContent.includes('...')) gpuStatus.textContent = t('testFailed');
         } finally {
             startBtn.disabled = false;
             startBtn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -568,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             dashboard.classList.remove('opacity-0');
             singleCoreBtn.disabled = true;
-            singleCoreBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> 單核測試中...';
+            singleCoreBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> ${t('singleTesting')}`;
             try {
                 await runSingleCoreBenchmark({ 
                     barEl: cpuSingleBar, 
@@ -576,10 +659,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusEl: cpuSingleStatus, 
                     tierEl: cpuSingleTierEl 
                 });
-                singleCoreBtn.innerHTML = '<i class="fa-solid fa-bolt mr-2"></i> 單核快速測試';
+                singleCoreBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2"></i> ${t('singleReady')}`;
             } catch (e) {
                 console.error(e);
-                singleCoreBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> 測試失敗';
+                singleCoreBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> ${t('singleFailed')}`;
             } finally {
                 singleCoreBtn.disabled = false;
             }
@@ -611,10 +694,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const history = loadHistory();
             if (!history.length) return;
             const h = history[0];
-            const share = `PerfX Benchmark: CPU ${h.cpuMulti ?? '--'} | GPU ${h.gpuFps ?? '--'}fps | RAM ${h.memGBs ?? '--'}GB/s | Net ${h.netDownMbps ?? '--'}Mbps | https://clever-biscotti-659db7.netlify.app/`;
+            const share = `PerfX Benchmark: CPU ${h.cpuMulti ?? '--'} | GPU ${h.gpuFps ?? '--'}fps | RAM ${h.memGBs ?? '--'}GB/s | Net ${h.netDownMbps ?? '--'}Mbps | https://fcyd5454.github.io/PerfX/`;
             navigator.clipboard.writeText(share).catch(()=>{});
-            copyShareBtn.textContent = '已複製';
-            setTimeout(() => copyShareBtn.textContent = '複製分享文字', 1200);
+            copyShareBtn.textContent = t('shareCopied');
+            setTimeout(() => copyShareBtn.textContent = t('shareIdle'), 1200);
         });
     }
     if (exportDropdownBtn && exportDropdown) {
@@ -784,12 +867,13 @@ function renderHistory() {
     if (listEl) {
         listEl.innerHTML = '';
         if (history.length === 0) {
-            listEl.innerHTML = '<li class="text-gray-500">尚無紀錄</li>';
+            listEl.innerHTML = `<li class="text-gray-500">${t('noRecords')}</li>`;
         } else {
+            const textFn = STRINGS[LANG]?.historyItem || STRINGS.zh.historyItem;
             history.forEach((h, idx) => {
                 const dt = new Date(h.timestamp);
                 const li = document.createElement('li');
-                li.innerHTML = `<span class="text-gray-400">${idx + 1}.</span> ${dt.toLocaleString()} | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} (${h.cpuMultiTier || '--'}) | 單核 ${h.cpuSingle?.toLocaleString?.() || '--'} (${h.cpuSingleTier || '--'}) | GPU ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | RAM ${h.memGBs ?? '--'} GB/s | I/O ${h.storageWrite ?? '--'}/${h.storageRead ?? '--'} MB/s | Net ${h.netDownMbps ?? '--'} Mbps / ${h.netLatencyMs ?? '--'} ms | 模式 ${h.mode || 'standard'} | 分辨率 ${h.gpuResScale || '-'}x | 核心 ${h.cores || '--'} | GPU型號 ${h.gpuModel || '--'}`;
+                li.innerHTML = `<span class="text-gray-400">${idx + 1}.</span> ${textFn(idx + 1, dt, h)}`;
                 listEl.appendChild(li);
             });
         }
@@ -849,12 +933,15 @@ function renderLeaderboard(history = []) {
     if (cpuEl) {
         cpuEl.innerHTML = '';
         if (topCpu.length === 0) {
-            cpuEl.innerHTML = '<li class="text-gray-500">尚無紀錄</li>';
+            cpuEl.innerHTML = `<li class="text-gray-500">${t('leaderboardEmpty')}</li>`;
         } else {
             topCpu.forEach((h, idx) => {
                 const dt = new Date(h.timestamp);
                 const li = document.createElement('li');
-                li.innerHTML = `<span class="text-gray-400">#${idx+1}</span> ${h.cpuMulti?.toLocaleString?.() || '--'} pts (${h.cpuMultiTier || '--'}) | 模式 ${h.mode || '-'} | GPU ${h.gpuFps ?? '--'} fps | ${dt.toLocaleString()} | 核心 ${h.cores || '--'} | ${h.gpuModel || '--'}`;
+                const text = LANG === 'en'
+                    ? `<span class="text-gray-400">#${idx+1}</span> ${h.cpuMulti?.toLocaleString?.() || '--'} pts (${h.cpuMultiTier || '--'}) | Mode ${h.mode || '-'} | GPU ${h.gpuFps ?? '--'} fps | ${dt.toLocaleString()} | Cores ${h.cores || '--'} | ${h.gpuModel || '--'}`
+                    : `<span class="text-gray-400">#${idx+1}</span> ${h.cpuMulti?.toLocaleString?.() || '--'} pts (${h.cpuMultiTier || '--'}) | 模式 ${h.mode || '-'} | GPU ${h.gpuFps ?? '--'} fps | ${dt.toLocaleString()} | 核心 ${h.cores || '--'} | ${h.gpuModel || '--'}`;
+                li.innerHTML = text;
                 cpuEl.appendChild(li);
             });
         }
@@ -863,12 +950,15 @@ function renderLeaderboard(history = []) {
     if (gpuEl) {
         gpuEl.innerHTML = '';
         if (topGpu.length === 0) {
-            gpuEl.innerHTML = '<li class="text-gray-500">尚無紀錄</li>';
+            gpuEl.innerHTML = `<li class="text-gray-500">${t('leaderboardEmpty')}</li>`;
         } else {
             topGpu.forEach((h, idx) => {
                 const dt = new Date(h.timestamp);
                 const li = document.createElement('li');
-                li.innerHTML = `<span class="text-gray-400">#${idx+1}</span> ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} | Net ${h.netDownMbps ?? '--'} Mbps | 模式 ${h.mode || '-'} | ${dt.toLocaleString()} | 核心 ${h.cores || '--'} | ${h.gpuModel || '--'}`;
+                const text = LANG === 'en'
+                    ? `<span class="text-gray-400">#${idx+1}</span> ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | CPU multi ${h.cpuMulti?.toLocaleString?.() || '--'} | Net ${h.netDownMbps ?? '--'} Mbps | Mode ${h.mode || '-'} | ${dt.toLocaleString()} | Cores ${h.cores || '--'} | ${h.gpuModel || '--'}`
+                    : `<span class="text-gray-400">#${idx+1}</span> ${h.gpuFps ?? '--'} fps (${h.gpuTier || '--'}) | CPU多核 ${h.cpuMulti?.toLocaleString?.() || '--'} | Net ${h.netDownMbps ?? '--'} Mbps | 模式 ${h.mode || '-'} | ${dt.toLocaleString()} | 核心 ${h.cores || '--'} | ${h.gpuModel || '--'}`;
+                li.innerHTML = text;
                 gpuEl.appendChild(li);
             });
         }
@@ -935,8 +1025,8 @@ async function runProfessionalCPUBenchmark() {
     // Reset UI
     setProgress(0);
     cpuScoreEl.innerHTML = '-- <span class="text-sm text-gray-500 font-normal">pts</span>';
-    setStatus(`預熱中...`, 'text-primary', 'text-green-500');
-    if (cpuTierEl) cpuTierEl.textContent = '等級：--';
+    setStatus(t('cpuWarmup'), 'text-primary', 'text-green-500');
+    if (cpuTierEl) cpuTierEl.textContent = `${t('tierPrefix')}--`;
 
     // 1) JIT Warmup
     const warmStart = performance.now();
@@ -948,7 +1038,7 @@ async function runProfessionalCPUBenchmark() {
     // 2) Multi-pass sampling (best-of)
     const results = [];
     for (let pass = 1; pass <= PASSES; pass++) {
-        setStatus(`測試中 (${pass}/${PASSES})...`, 'text-primary', 'text-green-500');
+        setStatus(t('cpuProgress', pass, PASSES), 'text-primary', 'text-green-500');
         let localOps = 0;
         const start = performance.now();
         await new Promise((resolve) => {
@@ -985,7 +1075,7 @@ async function runProfessionalCPUBenchmark() {
 
     // 5) Update UI and tier
     cpuScoreEl.innerHTML = `${finalScore.toLocaleString()} <span class="text-sm text-gray-500 font-normal">pts</span>`;
-    setStatus(`測試完成 (${(TOTAL_DURATION/1000).toFixed(1)}s)`, 'text-green-500', 'text-primary');
+    setStatus(t('cpuDone', TOTAL_DURATION/1000), 'text-green-500', 'text-primary');
     setProgress(100);
 
     const tier = getTier(finalScore, 'cpu');
@@ -1025,8 +1115,8 @@ async function runSingleCoreBenchmark(uiRefs = {}) {
     // Reset UI
     setProgress(0);
     if (score) score.innerHTML = '-- pts';
-    setStatus(`單核預熱中...`, 'text-primary', 'text-green-500');
-    if (tierLabel) tierLabel.textContent = '等級：--';
+    setStatus(t('singleWarmup'), 'text-primary', 'text-green-500');
+    if (tierLabel) tierLabel.textContent = `${t('tierPrefix')}--`;
 
     // Warmup
     const warmStart = performance.now();
@@ -1038,7 +1128,7 @@ async function runSingleCoreBenchmark(uiRefs = {}) {
     // Single-thread loop on main thread (latency oriented: branches + array access)
     const results = [];
     for (let pass = 1; pass <= PASSES; pass++) {
-        setStatus(`單核測試中 (${pass}/${PASSES})...`, 'text-primary', 'text-green-500');
+        setStatus(t('singleProgress', pass, PASSES), 'text-primary', 'text-green-500');
         let localOps = 0;
         const start = performance.now();
         await new Promise((resolve) => {
@@ -1076,7 +1166,7 @@ async function runSingleCoreBenchmark(uiRefs = {}) {
     const finalScore = Math.floor(maxOps * CPU_SINGLE_CALIBRATION_MULTIPLIER);
 
     if (score) score.innerHTML = `${finalScore.toLocaleString()} pts`;
-    setStatus(`單核測試完成`, 'text-green-500', 'text-primary');
+    setStatus(t('singleDone'), 'text-green-500', 'text-primary');
     setProgress(100);
 
     // Single-core descriptive tier (closer to real-world single-core)
@@ -1122,7 +1212,7 @@ async function runMemoryBandwidthTest(uiRefs = {}) {
     for (let i = 0; i < totalBytes; i += 4096) src[i] = i & 0xff;
 
     setProgress(0);
-    setStatus('記憶體吞吐量測試中 (RAM Throughput)...', 'text-primary', 'text-green-500');
+    setStatus(t('memTesting'), 'text-primary', 'text-green-500');
 
     const start = performance.now();
     let copiedBytes = 0;
@@ -1135,7 +1225,7 @@ async function runMemoryBandwidthTest(uiRefs = {}) {
     const gbps = +(copiedBytes / 1e9 / durationSec).toFixed(2);
 
     if (score) score.innerHTML = `${gbps.toLocaleString()} <span class="text-sm text-gray-500 font-normal">GB/s</span>`;
-    setStatus(`完成 (${MEM_DURATION_MS/1000}s)`, 'text-green-500', 'text-primary');
+    setStatus(t('memDone', MEM_DURATION_MS/1000), 'text-green-500', 'text-primary');
     setProgress(100);
 
     return { gbps };
@@ -1182,14 +1272,14 @@ async function runStorageIOTest(uiRefs = {}) {
     try {
         db = await openIOTestDB();
     } catch (e) {
-        setStatus('瀏覽器 I/O：IndexedDB 不支援，測試略過', 'text-red-500', 'text-primary');
+        setStatus(t('ioNotSupported'), 'text-red-500', 'text-primary');
         if (wScore) wScore.textContent = '--';
         if (rScore) rScore.textContent = '--';
         setProgress(0);
         return { writeMBps: 0, readMBps: 0 };
     }
 
-    setStatus('瀏覽器 I/O 寫入測試中...', 'text-primary', 'text-green-500');
+    setStatus(t('ioWrite'), 'text-primary', 'text-green-500');
     const writeStart = performance.now();
     for (let i = 0; i < STORAGE_ITER; i++) {
         await new Promise((resolve, reject) => {
@@ -1205,7 +1295,7 @@ async function runStorageIOTest(uiRefs = {}) {
     const writeMBps = +(((chunkBytes * STORAGE_ITER) / 1_048_576) / (writeMs / 1000)).toFixed(1);
     if (wScore) wScore.textContent = writeMBps.toString();
 
-    setStatus('瀏覽器 I/O 讀取測試中...', 'text-primary', 'text-green-500');
+    setStatus(t('ioRead'), 'text-primary', 'text-green-500');
     const readStart = performance.now();
     for (let i = 0; i < STORAGE_ITER; i++) {
         await new Promise((resolve, reject) => {
@@ -1222,10 +1312,10 @@ async function runStorageIOTest(uiRefs = {}) {
     if (rScore) rScore.textContent = readMBps.toString();
 
     if (readMBps > 5000) {
-        setStatus('瀏覽器 I/O 測試完成（可能為系統快取，建議冷啟再測）', 'text-amber-400', 'text-primary');
+        setStatus(t('ioDoneCache'), 'text-amber-400', 'text-primary');
         if (rScore) rScore.textContent = `${readMBps} ⚠`;
     } else {
-        setStatus('瀏覽器 I/O 測試完成', 'text-green-500', 'text-primary');
+        setStatus(t('ioDone'), 'text-green-500', 'text-primary');
     }
     setProgress(100);
 
@@ -1256,7 +1346,7 @@ async function runNetworkTest(uiRefs = {}) {
 
     const rtts = [];
     setProgress(0);
-    setStatus('網路延遲測試中...', 'text-primary', 'text-green-500');
+    setStatus(t('netLatency'), 'text-primary', 'text-green-500');
     for (let i = 0; i < NET_PINGS; i++) {
         const controller = new AbortController();
         const tStart = performance.now();
@@ -1283,7 +1373,7 @@ async function runNetworkTest(uiRefs = {}) {
     if (jit) jit.textContent = jitterMs ? jitterMs.toString() : '--';
 
     // Download test
-    setStatus('下載測試中 (Cloudflare 5MB)...', 'text-primary', 'text-green-500');
+    setStatus(t('netDownload'), 'text-primary', 'text-green-500');
     let downMbps = 0;
     try {
         const controller = new AbortController();
@@ -1303,7 +1393,7 @@ async function runNetworkTest(uiRefs = {}) {
     }
     if (down) down.textContent = downMbps ? downMbps.toString() : '--';
     setProgress(100);
-    setStatus('網路測試完成', 'text-green-500', 'text-primary');
+    setStatus(t('netDone'), 'text-green-500', 'text-primary');
 
     return { latencyMs, jitterMs, downMbps };
 }
@@ -1321,13 +1411,13 @@ async function runProfessionalGPUBenchmark() {
         const gpuDrawCalls = profile.gpuDrawCalls;
         const gpuDurationMs = profile.gpuDurationMs;
 
-        gpuStatus.textContent = "正在進行極限渲染 (Extreme GPU Stress)...";
+        gpuStatus.textContent = t('gpuStress');
         gpuStatus.classList.add('text-secondary');
         showGpuPreview();
 
         const canvas = document.getElementById('gl-canvas');
         if(!canvas) { 
-            gpuStatus.textContent = "測試失敗 (Canvas Missing)";
+            gpuStatus.textContent = t('gpuFailCanvas');
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-red-500');
             gpuScoreEl.innerHTML = `0 <span class="text-sm text-gray-500 font-normal">fps</span>`;
@@ -1351,7 +1441,7 @@ async function runProfessionalGPUBenchmark() {
 
         if (!gl) {
              gpuScoreEl.innerHTML = `0 <span class="text-sm text-gray-500 font-normal">fps</span>`;
-             gpuStatus.textContent = "WebGL 初始化失敗或不支援";
+             gpuStatus.textContent = t('gpuFailWebGL');
              gpuStatus.classList.remove('text-secondary');
              gpuStatus.classList.add('text-red-500');
              updateTierText('gpu-tier', { label: '--' });
@@ -1501,7 +1591,7 @@ async function runProfessionalGPUBenchmark() {
             
             gpuScoreEl.innerHTML = `${gpuFpsEffective} <span class="text-sm text-gray-500 font-normal">fps</span>`;
             gpuBar.style.width = '100%';
-            gpuStatus.textContent = `測試完成 (負載 x ${gpuLoopIter} 迭代, ${gpuDrawCalls}x draws/frame)`;
+            gpuStatus.textContent = t('gpuDone', gpuLoopIter, gpuDrawCalls);
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-green-500');
 
