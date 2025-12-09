@@ -1,5 +1,7 @@
 # PerfX — Browser Performance Benchmark Suite
 
+> Switch language / 切換語言: [繁體中文](README.md)
+
 > Professional-grade CPU/GPU/RAM/Browser I/O/Network benchmarking directly in the browser, with contextual tiers and export options.
 
 ## Live Demo
