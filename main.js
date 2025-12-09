@@ -1500,14 +1500,16 @@ async function runProfessionalGPUBenchmark() {
         const gpuBar = document.getElementById('gpu-bar');
         const profile = MODE_PROFILES[CURRENT_MODE] || MODE_PROFILES.standard;
         const isMobileDevice = DEVICE_CLASS === DEVICE_CLASSES.MOBILE;
-        const isArmHigh = DEVICE_CLASS === DEVICE_CLASSES.ARM_HIGH;
+
         const gpuLoopIterBase = profile.gpuLoopIter;
         const gpuDrawCallsBase = profile.gpuDrawCalls;
         const gpuDurationMs = profile.gpuDurationMs;
+        // Mobile optimizations: Reduce workload to ensure readable FPS (30-60 range)
         const gpuLoopIter = Math.max(80, Math.round(gpuLoopIterBase * (isMobileDevice ? MOBILE_GPU_LOOP_FACTOR : 1)));
         const gpuDrawCalls = Math.max(8, Math.round(gpuDrawCallsBase * (isMobileDevice ? MOBILE_GPU_DRAW_FACTOR : 1)));
+        
+        // Resolution scaling
         const appliedResScale = isMobileDevice ? Math.min(MOBILE_GPU_SCALE, GPU_RES_SCALE) : GPU_RES_SCALE;
-        const gpuPenalty = DEVICE_GPU_PENALTY[DEVICE_CLASS] ?? 1;
 
         gpuStatus.textContent = t('gpuStress');
         gpuStatus.classList.add('text-secondary');
@@ -1525,14 +1527,20 @@ async function runProfessionalGPUBenchmark() {
             return; 
         }
 
-        // Use strict device pixel ratio and upscale to force more fragments
+        // Desktop sanity check: avoid tiny clientWidth/Height before layout settles
+        let targetWidth = canvas.clientWidth;
+        let targetHeight = canvas.clientHeight;
+        if (!isMobileDevice && (targetWidth < 640 || targetHeight < 360)) {
+            targetWidth = Math.max(targetWidth, window.innerWidth * 0.8);
+            targetHeight = Math.max(targetHeight, window.innerHeight * 0.6);
+        }
+
         const dpr = window.devicePixelRatio || 1;
-        const resScale = appliedResScale; // standardized workload (adaptive)
-        canvas.width = canvas.clientWidth * dpr * resScale;
-        canvas.height = canvas.clientHeight * dpr * resScale;
+        canvas.width = targetWidth * dpr * appliedResScale;
+        canvas.height = targetHeight * dpr * appliedResScale;
 
         let gl = canvas.getContext('webgl', { 
-            antialias: false, // Disable AA to save CPU, focus on GPU shader calc
+            antialias: false, 
             powerPreference: "high-performance",
             preserveDrawingBuffer: false 
         }) || canvas.getContext('experimental-webgl');
@@ -1544,11 +1552,10 @@ async function runProfessionalGPUBenchmark() {
              gpuStatus.classList.add('text-red-500');
              updateTierText('gpu-tier', { label: '--' });
              hideGpuPreview();
-             resolve({ fps: 0, tierScore: 0, tierLabel: '--', resScale: resScale });
+             resolve({ fps: 0, tierScore: 0, tierLabel: '--', resScale: appliedResScale });
              return;
         }
 
-        // Optional GPU timer query extension for uncapped GPU time measurement
         const timerExt = gl.getExtension('EXT_disjoint_timer_query');
 
         const vertices = new Float32Array([
@@ -1571,30 +1578,22 @@ async function runProfessionalGPUBenchmark() {
             }
         `;
 
-        // Extreme Fragment Shader: standardized heavy loop
         const fragCode = `
             precision mediump float;
             uniform float u_time;
             uniform vec2 u_resolution;
-
             void main() {
                 vec2 uv = gl_FragCoord.xy / u_resolution.xy;
                 vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / u_resolution.y;
-                
                 vec3 col = vec3(0.0);
-                
-                // EXTREME loop count to force GPU usage even on small canvases
                 for(float i = 0.0; i < ${gpuLoopIter}.0; i++) {
                     float s = sin(u_time * 0.2 + i * 0.05);
                     float c = cos(u_time * 0.1 + i * 0.05);
                     p = mat2(c, -s, s, c) * p;
-                    p = abs(p) - 0.5; // Spread out pattern
-                    
+                    p = abs(p) - 0.5;
                     float dist = length(p * p);
-                    // Add complexity
                     col += vec3(0.002 / dist) * (sin(u_time + i*0.1) * 0.5 + 0.5);
                 }
-
                 gl_FragColor = vec4(col * vec3(0.8, 0.2, 0.5), 1.0);
             }
         `;
@@ -1604,7 +1603,6 @@ async function runProfessionalGPUBenchmark() {
             gl.shaderSource(shader, source);
             gl.compileShader(shader);
             if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error(gl.getShaderInfoLog(shader));
                 return null;
             }
             return shader;
@@ -1627,7 +1625,6 @@ async function runProfessionalGPUBenchmark() {
         const startTime = performance.now();
         let running = true;
 
-        // GPU timer query accumulation
         let gpuTimeTotalNs = 0;
         let gpuTimeSamples = 0;
         let pendingQuery = null;
@@ -1640,7 +1637,6 @@ async function runProfessionalGPUBenchmark() {
             gl.uniform2f(locRes, canvas.width, canvas.height);
             gl.viewport(0, 0, canvas.width, canvas.height);
 
-            // Begin timer query if available and none pending
             if (timerExt && !pendingQuery) {
                 pendingQuery = timerExt.createQueryEXT();
                 timerExt.beginQueryEXT(timerExt.TIME_ELAPSED_EXT, pendingQuery);
@@ -1650,10 +1646,8 @@ async function runProfessionalGPUBenchmark() {
                 gl.drawArrays(gl.TRIANGLES, 0, 6);
             }
 
-            // End and collect timer query
             if (timerExt && pendingQuery) {
                 timerExt.endQueryEXT(timerExt.TIME_ELAPSED_EXT);
-                // Poll availability
                 const available = timerExt.getQueryObjectEXT(pendingQuery, timerExt.QUERY_RESULT_AVAILABLE_EXT);
                 const disjoint = gl.getParameter(timerExt.GPU_DISJOINT_EXT);
                 if (available && !disjoint) {
@@ -1666,7 +1660,6 @@ async function runProfessionalGPUBenchmark() {
                     pendingQuery = null;
                 }
             }
-
             frameCount++;
             requestAnimationFrame(render);
         }
@@ -1678,10 +1671,9 @@ async function runProfessionalGPUBenchmark() {
             const duration = (performance.now() - startTime) / 1000;
             const fps = Math.round(frameCount / duration);
 
-            // If timer query is available, compute uncapped GPU fps by GPU time
             let gpuFpsEffective = fps;
             if (timerExt && gpuTimeSamples > 0) {
-                const avgGpuMs = (gpuTimeTotalNs / gpuTimeSamples) / 1e6; // ns -> ms
+                const avgGpuMs = (gpuTimeTotalNs / gpuTimeSamples) / 1e6; 
                 if (avgGpuMs > 0) {
                     gpuFpsEffective = Math.round(1000 / avgGpuMs);
                 }
@@ -1693,29 +1685,30 @@ async function runProfessionalGPUBenchmark() {
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-green-500');
 
-            // Resolution-aware GPU tier scoring (PPS-based)
             const canvasWidth = gl.drawingBufferWidth;
             const canvasHeight = gl.drawingBufferHeight;
             const totalPixels = canvasWidth * canvasHeight;
-            const pps = totalPixels * gpuFpsEffective; // pixels per second
-            const BASELINE_PPS = 1920 * 1080 * 60; // GTX 1050 @1080p60
-            const BASELINE_SCORE = 2300; // Time Spy ~GTX 1050
+            const pps = totalPixels * gpuFpsEffective; 
+            
+            const BASELINE_PPS = 1920 * 1080 * 60; 
+            const BASELINE_SCORE = 2300; 
+            
             let tierScore = (pps / BASELINE_PPS) * BASELINE_SCORE;
             if (DEVICE_CLASS === DEVICE_CLASSES.MOBILE) {
-                // Calibrated: mobile @0.7x + simplified shader needs strong uplift to land Mali-G68/G57 correctly
-                tierScore *= 6.0;
+                tierScore *= 6.0; 
             } else if (DEVICE_CLASS === DEVICE_CLASSES.ARM_HIGH) {
-                tierScore *= 0.85;
+                tierScore *= 0.85; 
             }
+            
             if (CURRENT_MODE === 'extreme') {
                 tierScore *= 1.2;
             }
-            const gpuTierScore = Math.floor(tierScore);
+            const gpuTierScore = Math.floor(Math.max(0, tierScore));
             const tier = getTier(gpuTierScore, 'gpu');
             updateTierText('gpu-tier', tier);
             
             hideGpuPreview();
-            resolve({ fps: gpuFpsEffective, tierScore: gpuTierScore, tierLabel: tier.label, resScale: resScale });
+            resolve({ fps: gpuFpsEffective, tierScore: gpuTierScore, tierLabel: tier.label, resScale: appliedResScale });
         }, gpuDurationMs);
     });
 }
