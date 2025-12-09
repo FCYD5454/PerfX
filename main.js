@@ -1693,14 +1693,23 @@ async function runProfessionalGPUBenchmark() {
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-green-500');
 
-            // Normalize GPU tier using rendered pixels-per-second to neutralize resolution differences
-            const renderedPixels = canvas.width * canvas.height;
-            const BASELINE_PPS = 1920 * 1080 * 60; // 1080p@60fps baseline (~RTX 4060 ref scale)
-            const workloadPenalty = (DEVICE_CLASS === DEVICE_CLASSES.MOBILE)
-                ? (MOBILE_GPU_LOOP_FACTOR * MOBILE_GPU_DRAW_FACTOR)
-                : 1;
-            const normalizedScore = (renderedPixels * gpuFpsEffective / BASELINE_PPS) * 10000;
-            const gpuTierScore = Math.floor(normalizedScore * gpuPenalty * workloadPenalty);
+            // Resolution-aware GPU tier scoring (PPS-based)
+            const canvasWidth = gl.drawingBufferWidth;
+            const canvasHeight = gl.drawingBufferHeight;
+            const totalPixels = canvasWidth * canvasHeight;
+            const pps = totalPixels * gpuFpsEffective; // pixels per second
+            const BASELINE_PPS = 1920 * 1080 * 60; // GTX 1050 @1080p60
+            const BASELINE_SCORE = 2300; // Time Spy ~GTX 1050
+            let tierScore = (pps / BASELINE_PPS) * BASELINE_SCORE;
+            if (DEVICE_CLASS === DEVICE_CLASSES.MOBILE) {
+                tierScore *= 0.55; // heavier penalty for simplified mobile workload
+            } else if (DEVICE_CLASS === DEVICE_CLASSES.ARM_HIGH) {
+                tierScore *= 0.85;
+            }
+            if (CURRENT_MODE === 'extreme') {
+                tierScore *= 1.2;
+            }
+            const gpuTierScore = Math.floor(tierScore);
             const tier = getTier(gpuTierScore, 'gpu');
             updateTierText('gpu-tier', tier);
             
