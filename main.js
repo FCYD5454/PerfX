@@ -1674,9 +1674,12 @@ async function runProfessionalGPUBenchmark() {
             gpuStatus.classList.remove('text-secondary');
             gpuStatus.classList.add('text-green-500');
 
-            // Normalize GPU tier to align high-end cards (simple scaling with effective fps)
-            const gpuTierScoreRaw = Math.floor(gpuFpsEffective * 400); // 100fps -> 40,000 (maps to flagship tiers)
-            const gpuTierScore = Math.floor(gpuTierScoreRaw * gpuPenalty);
+            // Normalize GPU tier, accounting for mobile downscale & simplified workload
+            const gpuTierScoreRaw = Math.floor(gpuFpsEffective * 400); // base: 100fps -> 40,000
+            const downscalePenalty = (DEVICE_CLASS === DEVICE_CLASSES.MOBILE)
+                ? (resScale * resScale * MOBILE_GPU_LOOP_FACTOR * MOBILE_GPU_DRAW_FACTOR) // e.g., 0.7^2 * 0.6 * 0.6 ~= 0.1764
+                : 1;
+            const gpuTierScore = Math.floor(gpuTierScoreRaw * gpuPenalty * downscalePenalty);
             const tier = getTier(gpuTierScore, 'gpu');
             updateTierText('gpu-tier', tier);
             
