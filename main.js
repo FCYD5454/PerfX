@@ -1702,8 +1702,8 @@ async function runProfessionalGPUBenchmark() {
             const BASELINE_SCORE = 2300; // Time Spy ~GTX 1050
             let tierScore = (pps / BASELINE_PPS) * BASELINE_SCORE;
             if (DEVICE_CLASS === DEVICE_CLASSES.MOBILE) {
-                // Adjusted to compensate 0.7x res + mobile shader simplification; target ~Mali-G68 mid-range
-                tierScore *= 1.4;
+                // Calibrated: mobile @0.7x + simplified shader needs strong uplift to land Mali-G68/G57 correctly
+                tierScore *= 6.0;
             } else if (DEVICE_CLASS === DEVICE_CLASSES.ARM_HIGH) {
                 tierScore *= 0.85;
             }
